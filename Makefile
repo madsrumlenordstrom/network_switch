@@ -5,6 +5,6 @@ compile:
 	quartus_sta network-switch
 
 clean:
-	rm -rf db incremental_db
+	$(RM) -rf db incremental_db output_files
 
 .PHONY: compile clean
