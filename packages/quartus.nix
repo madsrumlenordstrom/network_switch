@@ -24,7 +24,6 @@ let
     genericName = "Quartus Prime";
     categories = [ "Development" ];
   };
-# I think modelsim_ase/linux/vlm checksums itself, so use FHSUserEnv instead of `patchelf`
 in buildFHSUserEnv rec {
   name = "quartus-prime"; # wrapped
 
@@ -35,6 +34,8 @@ in buildFHSUserEnv rec {
     xorg.libSM
     zlib
     libxcrypt-legacy
+    expat
+    xorg.libXft
     # qsys requirements
     xorg.libXtst
     xorg.libXi
@@ -72,14 +73,22 @@ in buildFHSUserEnv rec {
     qsysExecutables = map (c: "quartus/sopc_builder/bin/qsys-${c}") [
       "generate" "edit" "script"
     ];
-  in ''
+
+    questaExecutables = map (c: "questa_fse/bin/${c}") [
+      "crd2bin" "dumplog64" "flps_util" "hdloffice" "hm_entity" "jobspy" "mc2com" "mc2perfanalyze" "mc2_util"
+      "qhcvt" "qhdel" "qhdir" "qhgencomp" "qhlib" "qhmake" "qhmap" "qhsim" "qrun" "qverilog" "qvhcom" "qvlcom"
+      "qwave2vcd" "qwaveman" "qwaveutils" "sccom" "scgenmod" "sdfcom" "sm_entity" "triage" "vcd2qwave" "vcd2wlf"
+      "vcom" "vcover" "vdbg" "vdel" "vdir" "vencrypt" "verror" "vgencomp" "vhencrypt" "vis" "visualizer" "vlib"
+      "vlog" "vmake" "vmap" "vopt" "vovl" "vrun" "vsim" "wlf2log" "wlf2vcd" "wlfman" "wlfrecover" "xml2ucdb"
+    ];
+  in /* bash */ ''
     mkdir -p $out/share/applications $out/share/icons/128x128
     ln -s ${desktopItem}/share/applications/* $out/share/applications
     ln -s ${quartus-unwrapped}/licenses/images/dc_quartus_panel_logo.png $out/share/icons/128x128/quartus.png
 
-    mkdir -p $out/quartus/bin $out/quartus/sopc_builder/bin
+    mkdir -p $out/quartus/bin $out/quartus/sopc_builder/bin $out/questa_fse/bin
     WRAPPER=$out/bin/${name}
-    EXECUTABLES="${lib.concatStringsSep " " (quartusExecutables ++ qsysExecutables )}"
+    EXECUTABLES="${lib.concatStringsSep " " (quartusExecutables ++ qsysExecutables ++ questaExecutables)}"
     for executable in $EXECUTABLES; do
         echo "#!${stdenv.shell}" >> $out/$executable
         echo "$WRAPPER ${quartus-unwrapped}/$executable \"\$@\"" >> $out/$executable
