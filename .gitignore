@@ -2,5 +2,7 @@ db
 incremental_db
 output_files
 result
+obj_dir
+*.vcd
 
 .DS_Store
