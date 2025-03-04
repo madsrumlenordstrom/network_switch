@@ -16,3 +16,8 @@ With the tools now installed you can run:
 make compile
 ```
 This will compile the code with Quartus.
+
+You can run the test suite with:
+```shell
+make test
+```
