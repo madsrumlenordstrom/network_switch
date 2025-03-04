@@ -5,7 +5,7 @@ module fcs_check_serial (
     input logic reset,
     input logic start_of_frame, // Arrival of first bit in frame
     input logic end_of_frame,   // Arrival of first bit in FCS
-    input logic data_in,        // Bits transmittedj
+    input logic data_in,        // Bits transmitted
     output logic fcs_error      // Indicates an error
 );
 
@@ -66,7 +66,7 @@ module fcs_check_serial (
             state <= idle;
         end else begin
             state <= next_state;
-            if (start_of_frame || state != idle) begin
+            if (start_of_frame || state != idle && next_state != idle) begin
                 fcs_reg[0] <= data ^ fcs_reg[31];
                 fcs_reg[1] <= fcs_reg[0] ^ fcs_reg[31];
                 fcs_reg[2] <= fcs_reg[1] ^ fcs_reg[31];

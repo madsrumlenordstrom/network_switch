@@ -97,7 +97,6 @@ module fcs_check_serial_tb;
         #20 reset = 0;
 
         transmit_packet(packet_data_correct);
-
         transmit_packet(packet_data_incorrect);
 
         // End Simulation
