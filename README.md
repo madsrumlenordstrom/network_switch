@@ -17,7 +17,7 @@ make compile
 ```
 This will compile the code with Quartus.
 
-You can run the test suite with:
+You can run a specific testbench by setting the ```TEST_MODULE``` from the command line:
 ```shell
-make test
+make TEST_MODULE=async_fifo_tb test
 ```
