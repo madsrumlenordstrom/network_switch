@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 module gray_to_binary #(parameter DATA_WIDTH = 8) (
-    input  logic [DATA_WIDTH-1:0] gray,
+    input logic [DATA_WIDTH-1:0] gray,
     output logic [DATA_WIDTH-1:0] binary
 );
     always_comb begin
