@@ -70,16 +70,20 @@ module async_fifo #(
     end
 
     // Write operation
-    always_ff @(posedge wclk) begin
-        if (wen) begin
+    always_ff @(posedge wclk or posedge reset) begin
+        if (reset) begin
+            wptr <= 0;
+        end else if (wen) begin
             ram[waddr] <= write_data_in;
             wptr <= wptr + 1;
         end
     end
 
     // Read operation
-    always_ff @(posedge rclk) begin
-        if (ren) begin
+    always_ff @(posedge rclk or posedge reset) begin
+        if (reset) begin
+            rptr <= 0;
+        end else if (ren) begin
             // Maybe only rptr should be updated in
             // Does is make sense to put read data in register???
             read_data_out <= ram[raddr];
