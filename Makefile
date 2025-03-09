@@ -15,7 +15,7 @@ compile:
 	quartus_asm $(PROJECT)
 	quartus_sta $(PROJECT)
 
-$(OBJ_DIR)/V%: $(TB_DIR)/%.sv
+$(OBJ_DIR)/V%: $(TB_DIR)/%.sv $(SRCS)
 	verilator --binary -j 0 $< $(SRCS) --top-module $(TEST_MODULE) --trace
 
 test: $(OBJ_DIR)/V$(TEST_MODULE)
