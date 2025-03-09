@@ -20,7 +20,7 @@
           default = quartus;
         };
 
-        devShells = rec {
+        devShells = {
           default = pkgs.mkShell {
             name = "stratix";
             packages = [
@@ -32,7 +32,9 @@
             name = "stratix-quartus";
             packages = [
               self.outputs.packages.${system}.quartus
-            ] ++ default.packages;
+              pkgs.verilator
+              pkgs.gtkwave
+            ];
             shellHook = ''
               export LM_LICENSE_FILE=1919@quartus.ait.dtu.dk
             '';
