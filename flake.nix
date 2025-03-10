@@ -24,6 +24,13 @@
           default = pkgs.mkShell {
             name = "stratix";
             packages = [
+              pkgs.verilator
+              pkgs.gtkwave
+            ];
+          };
+          quartus = pkgs.mkShell {
+            name = "stratix-quartus";
+            packages = [
               self.outputs.packages.${system}.quartus
               pkgs.verilator
               pkgs.gtkwave
