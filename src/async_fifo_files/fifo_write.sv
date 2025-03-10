@@ -1,26 +1,25 @@
 module fifo_write #(
-    parameter BIT_SIZE = 10,
-    parameter FIFO_SIZE = 10
+    parameter ADDR_WIDTH = 5
 )
 (
-    output reg [BIT_SIZE-1:0] waddr,
+    output reg [ADDR_WIDTH-1:0] waddr,
     output reg wen,
-    output reg [BIT_SIZE:0] fifo_occu_in,
+    output reg [ADDR_WIDTH-1:0] fifo_occu_in,
     output reg full,
-    output reg [BIT_SIZE-1+1:0] wptr = 0,
+    output reg [ADDR_WIDTH:0] wptr,
     
     input wclk,
     input reset,
     input write_enable,
-    input [BIT_SIZE-1+1:0] rptr
+    input [ADDR_WIDTH:0] rptr
 );
 
 
-logic [BIT_SIZE:0] occupance = 0;
-wire full_fifo = (rptr[BIT_SIZE] != wptr[BIT_SIZE]) && (rptr[BIT_SIZE-1:0] == wptr[BIT_SIZE-1:0]);
+logic [ADDR_WIDTH-1:0] occupance = 0;
+wire full_fifo = (rptr[ADDR_WIDTH] != wptr[ADDR_WIDTH]) && (rptr[ADDR_WIDTH-1:0] == wptr[ADDR_WIDTH-1:0]);
 
 always_comb begin
-    waddr = wptr [BIT_SIZE-1:0];
+    waddr = wptr[ADDR_WIDTH-1:0];
 end
 
 always @(posedge wclk) begin
