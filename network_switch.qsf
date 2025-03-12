@@ -26,7 +26,7 @@
 # Notes:
 #
 # 1) The default values for assignments are stored in the file:
-#		network-switch_assignment_defaults.qdf
+#		network_switch_assignment_defaults.qdf
 #    If this file doesn't exist, see file:
 #		assignment_defaults.qdf
 #
@@ -51,4 +51,10 @@ set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
-set_global_assignment -name SYSTEMVERILOG_FILE "src/network-switch.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/network_switch.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/async_fifo.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/data_synchronizer.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/binary_to_gray.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/gray_to_binary.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/fcs_check_serial.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/fcs_check_parallel.sv"

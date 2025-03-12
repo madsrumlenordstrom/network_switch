@@ -1,4 +1,4 @@
-PROJECT := network-switch
+PROJECT := network_switch
 TOP_MODULE ?= network_switch
 TEST_MODULE ?= network_switch_tb
 
