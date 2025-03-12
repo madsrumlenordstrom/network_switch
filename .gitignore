@@ -4,5 +4,6 @@ output_files
 result
 obj_dir
 *.vcd
+*.gtkw
 
 .DS_Store
