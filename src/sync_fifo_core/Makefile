@@ -2,7 +2,7 @@ target ?= sync_fifo_core
 
 .PHONY: comp
 comp:
-	verilator --binary --trace $(target).sv $(target)_tb.sv --top $(target)_tb
+	verilator --binary --trace sdp_1clk_ram.sv $(target).sv $(target)_tb.sv --top $(target)_tb
 
 .PHONY: sim
 sim:
