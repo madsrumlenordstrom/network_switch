@@ -368,7 +368,7 @@ module crossbar #(
 
   assign vc30_write = ((rx_dest3 == 3'h0) || (rx_dest3 == 3'h4));
   assign vc31_write = ((rx_dest3 == 3'h1) || (rx_dest3 == 3'h4));
-  assign vc32_write = ((rx_dest3 == 3'h3) || (rx_dest3 == 3'h4));
+  assign vc32_write = ((rx_dest3 == 3'h2) || (rx_dest3 == 3'h4));
 
   // Make requests for each port
   assign requests_tx0 = {~vc30_empty & ~vc30_eof_delay, ~vc20_empty & ~vc20_eof_delay, ~vc10_empty & ~vc10_eof_delay};
