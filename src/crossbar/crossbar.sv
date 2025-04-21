@@ -141,7 +141,8 @@ module crossbar #(
   // Queue for port rx1 to tx0
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc10 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -156,7 +157,8 @@ module crossbar #(
   // Queue for port rx2 to tx0
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc20 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -171,7 +173,8 @@ module crossbar #(
   // Queue for port rx3 to tx0
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc30 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -186,7 +189,8 @@ module crossbar #(
   // Queue for port rx0 to tx1
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc01 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -201,7 +205,8 @@ module crossbar #(
   // Queue for port rx2 to tx1
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc21 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -216,7 +221,8 @@ module crossbar #(
   // Queue for port rx3 to tx1
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc31 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -231,7 +237,8 @@ module crossbar #(
   // Queue for port rx0 to tx2 
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc02 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -246,7 +253,8 @@ module crossbar #(
   // Queue for port rx1 to tx2
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc12 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -261,7 +269,8 @@ module crossbar #(
   // Queue for port rx3 to tx2
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc32 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -276,7 +285,8 @@ module crossbar #(
   // Queue for port rx0 to tx3
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc03 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -291,7 +301,8 @@ module crossbar #(
   // Queue for port rx1 to tx3
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc13 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -306,7 +317,8 @@ module crossbar #(
   // Queue for port rx2 to tx3
   sync_fifo_core #(
     .P_DATA_WIDTH(9), // 8 bits of data + 1 bit for eof
-    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH),
+    .P_FWFT(1)
   ) u_sync_fifo_core_vc23 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
