@@ -7,10 +7,11 @@ module sync_fifo_core_tb;
   // Module parameters 
   parameter int P_DATA_WIDTH = 8;
   parameter int P_ADDR_WIDTH = 4;
+  parameter int P_FWFT = 1; // 1: FWFT, 0: Non-FWFT
 
   // Clocks and reset
   logic clk_i = 0;
-  logic rstn_i = 0; // Global asynchronous reset (Synchronized in module)
+  logic rstn_i = 0;
 
   logic                    wr_i = 0;
   logic [P_ADDR_WIDTH:0]   fill_level_o;
@@ -22,7 +23,8 @@ module sync_fifo_core_tb;
 
   sync_fifo_core #(
     .P_DATA_WIDTH(P_DATA_WIDTH),
-    .P_ADDR_WIDTH(P_ADDR_WIDTH)
+    .P_ADDR_WIDTH(P_ADDR_WIDTH),
+    .P_FWFT(P_FWFT)
   ) u_sync_fifo_core(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
@@ -44,7 +46,7 @@ module sync_fifo_core_tb;
   int burst_len;
   int fifo_free_space;
 
-  assign rd_i = ~empty_o; // Always read when data present in FIFO
+  assign rd_i = ~empty_o & rstn_i; // Always read when data present in FIFO
 
   initial begin
     // Dump Waveform
@@ -85,15 +87,26 @@ module sync_fifo_core_tb;
   end
 
 
-  // Check data read from FIFO
-  always_ff @(posedge clk_i) begin
-    rd_delay <= rd_i; // Propagate read signal (so we have a signal corresponding to data out)
-    if (rd_i) total_read++;
-    if (rd_delay) begin // If data on output
-      $display("FIFO: %h\tREF:%h",data_o,ref_fifo[$]);
-      if (ref_fifo.pop_back() != data_o) mismatches++; // Increment mismatches if not equal to reference
-    end
+  // Check data read from FIFO  
+  if (P_FWFT == 1) begin: g_read_fwft
+    always_ff @(posedge clk_i) begin
+      if (rd_i) begin 
+        total_read++;
+        $display("FIFO: %h\tREF:%h",data_o,ref_fifo[$]);
+        if (ref_fifo.pop_back() != data_o) mismatches++; // Increment mismatches if not equal to reference
+      end
 
+    end
+  end else begin: g_read_non_fwft
+    always_ff @(posedge clk_i) begin
+      rd_delay <= rd_i; // Propagate read signal (so we have a signal corresponding to data out)
+      if (rd_i) total_read++;
+      if (rd_delay) begin // If data on output
+        $display("FIFO: %h\tREF:%h",data_o,ref_fifo[$]);
+        if (ref_fifo.pop_back() != data_o) mismatches++; // Increment mismatches if not equal to reference
+      end
+
+    end
   end
 
   // TASKS
