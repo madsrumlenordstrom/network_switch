@@ -48,16 +48,8 @@ module crossbar #(
   // ##########################################################################
   //  Signals 
   // ##########################################################################
-  logic [2:0] requests_tx0;
-  logic [2:0] requests_tx1;
-  logic [2:0] requests_tx2;
-  logic [2:0] requests_tx3;
-
-  logic [2:0] grants_tx0;
-  logic [2:0] grants_tx1;
-  logic [2:0] grants_tx2;
-  logic [2:0] grants_tx3;
-
+  logic [3:0][2:0] requests_tx;
+  logic [3:0][2:0] grants_tx;
 
   // Virtual channels (data comprises rx_data and bit for eof) first bit is origin, second bit is destination
   // Output port tx0
@@ -336,29 +328,29 @@ module crossbar #(
   arbiter #(.P_WIDTH(3)) arbiter_tx0 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
-    .request_i(requests_tx0),
-    .grant_o(grants_tx0)
+    .request_i(requests_tx[0]),
+    .grant_o(grants_tx[0])
   );
   // Arbiter for port tx1
   arbiter #(.P_WIDTH(3)) arbiter_tx1 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
-    .request_i(requests_tx1),
-    .grant_o(grants_tx1)
+    .request_i(requests_tx[1]),
+    .grant_o(grants_tx[1])
   );
   // Arbiter for port tx2
   arbiter #(.P_WIDTH(3)) arbiter_tx2 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
-    .request_i(requests_tx2),
-    .grant_o(grants_tx2)
+    .request_i(requests_tx[2]),
+    .grant_o(grants_tx[2])
   );
   // Arbiter for port tx3
   arbiter #(.P_WIDTH(3)) arbiter_tx3 (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
-    .request_i(requests_tx3),
-    .grant_o(grants_tx3)
+    .request_i(requests_tx[3]),
+    .grant_o(grants_tx[3])
   );
 
 
@@ -383,21 +375,21 @@ module crossbar #(
   assign vc32_write = ((rx_dest3 == 3'h2) || (rx_dest3 == 3'h4));
 
   // Make requests for each port
-  assign requests_tx0 = {~vc30_empty & ~vc30_eof_delay, ~vc20_empty & ~vc20_eof_delay, ~vc10_empty & ~vc10_eof_delay};
-  assign requests_tx1 = {~vc31_empty & ~vc31_eof_delay, ~vc21_empty & ~vc21_eof_delay, ~vc01_empty & ~vc01_eof_delay};
-  assign requests_tx2 = {~vc32_empty & ~vc32_eof_delay, ~vc12_empty & ~vc12_eof_delay, ~vc02_empty & ~vc02_eof_delay};
-  assign requests_tx3 = {~vc23_empty & ~vc23_eof_delay, ~vc13_empty & ~vc13_eof_delay, ~vc03_empty & ~vc03_eof_delay};
+  assign requests_tx[0] = {~vc30_empty & ~vc30_eof_delay, ~vc20_empty & ~vc20_eof_delay, ~vc10_empty & ~vc10_eof_delay};
+  assign requests_tx[1] = {~vc31_empty & ~vc31_eof_delay, ~vc21_empty & ~vc21_eof_delay, ~vc01_empty & ~vc01_eof_delay};
+  assign requests_tx[2] = {~vc32_empty & ~vc32_eof_delay, ~vc12_empty & ~vc12_eof_delay, ~vc02_empty & ~vc02_eof_delay};
+  assign requests_tx[3] = {~vc23_empty & ~vc23_eof_delay, ~vc13_empty & ~vc13_eof_delay, ~vc03_empty & ~vc03_eof_delay};
   
   // Read from Virtual channels on grant
-  assign {vc23_read, vc13_read, vc03_read} = grants_tx3; 
-  assign {vc32_read, vc12_read, vc02_read} = grants_tx2;
-  assign {vc31_read, vc21_read, vc01_read} = grants_tx1;
-  assign {vc30_read, vc20_read, vc10_read} = grants_tx0;
+  assign {vc23_read, vc13_read, vc03_read} = grants_tx[3]; 
+  assign {vc32_read, vc12_read, vc02_read} = grants_tx[2];
+  assign {vc31_read, vc21_read, vc01_read} = grants_tx[1];
+  assign {vc30_read, vc20_read, vc10_read} = grants_tx[0];
 
   // Multiplex data and control signals
   always_comb begin
     // Port Tx 0
-    unique case (grants_tx0)
+    unique case (grants_tx[0])
       3'b001: begin // Grant from rx port 1
         tx_data0 = vc10_data[7:0];
         tx_ctrl0 = 1'b1;
@@ -416,7 +408,7 @@ module crossbar #(
       end
     endcase
     // Port Tx 1
-    unique case (grants_tx1)
+    unique case (grants_tx[1])
       3'b001: begin // Grant from rx port 0
         tx_data1 = vc01_data[7:0];
         tx_ctrl1 = 1'b1;
@@ -435,7 +427,7 @@ module crossbar #(
       end
     endcase
     // Port Tx 2
-    unique case (grants_tx2)
+    unique case (grants_tx[2])
       3'b001: begin // Grant from rx port 0
         tx_data2 = vc02_data[7:0];
         tx_ctrl2 = 1'b1;
@@ -454,7 +446,7 @@ module crossbar #(
       end
     endcase
     // Port Tx 3
-    unique case (grants_tx3)
+    unique case (grants_tx[3])
       3'b001: begin // Grant from rx port 0
         tx_data3 = vc03_data[7:0];
         tx_ctrl3 = 1'b1;
