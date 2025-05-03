@@ -11,54 +11,41 @@ module crossbar_tb;
   logic rstn_i;
 
   // RX Data and control
-  logic [7:0] rx_data [4];
-  logic       rx_done [4];
-  logic [2:0] rx_dest [4];
+  logic [3:0][7:0] rx_data; // 4 RX ports, 8b data
+  logic [3:0]      rx_done; // 4 RX ports, 1b done signal (high accompanying last byte of data)
+  logic [3:0][2:0] rx_dest; // 4 RX ports, 3b destination port (0-3 for respective TX) (4 is broadcast to all TX ports) (5-7 are invalid)
 
   // TX Data and control
-  logic [7:0] tx_data [4];
-  logic       tx_ctrl [4];
+  logic [3:0][7:0] tx_data; // 4 TX ports, 8-bit data
+  logic [3:0]      tx_ctrl; // 4 TX ports, 1b control signal (high when data is valid)
 
   // Reference tx data queues (seperate for each VC, should be 3, but is 4 for code simplicity the 4th should never be filled)
   logic [7:0] tx_data_ref [4][4][$]; 
   int total_errors [4] = '{default: 0};
   int total_matches [4] = '{default: 0};
 
-  logic [2:0] valid_tx_for_rx1 [4] = '{0, 2, 3, 4};
+  // Used to generate random TX port for RX ports 1-3
+  logic [2:0] valid_tx_for_rx1 [4] = '{0, 2, 3, 4}; 
   logic [2:0] valid_tx_for_rx2 [4] = '{0, 1, 3, 4};
   logic [2:0] valid_tx_for_rx3 [4] = '{0, 1, 2, 4};
   int random_index1;
   int random_index2;
   int random_index3;
 
+  // Used to inspect the grants for each TX port (needed to check reference queues)
   int grant_inspect [4];
 
-  // Instantiate the crossbar module
+  // Instantiate the crossbar module (DUT)
   crossbar #(
     .P_QUEUE_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
   ) u_crossbar (
     .clk_i(clk_i),
     .rstn_i(rstn_i),
-    .rx_data0(rx_data[0]),
-    .rx_done0(rx_done[0]),
-    .rx_dest0(rx_dest[0]),
-    .rx_data1(rx_data[1]),
-    .rx_done1(rx_done[1]),
-    .rx_dest1(rx_dest[1]),
-    .rx_data2(rx_data[2]),
-    .rx_done2(rx_done[2]),
-    .rx_dest2(rx_dest[2]),
-    .rx_data3(rx_data[3]),
-    .rx_done3(rx_done[3]),
-    .rx_dest3(rx_dest[3]),
-    .tx_data0(tx_data[0]),
-    .tx_ctrl0(tx_ctrl[0]),
-    .tx_data1(tx_data[1]),
-    .tx_ctrl1(tx_ctrl[1]),
-    .tx_data2(tx_data[2]),
-    .tx_ctrl2(tx_ctrl[2]),
-    .tx_data3(tx_data[3]),
-    .tx_ctrl3(tx_ctrl[3])
+    .rx_data(rx_data),
+    .rx_done(rx_done),
+    .rx_dest(rx_dest),
+    .tx_data(tx_data),
+    .tx_ctrl(tx_ctrl)
   );
 
   // Clock Control
@@ -69,8 +56,8 @@ module crossbar_tb;
     // Initialize signals
     clk_i = 0;
     rstn_i = 0;
-    rx_data = '{default: 0};
-    rx_done = '{default: 0};
+    rx_data = 0;
+    rx_done = 0;
     rx_dest = '{default: 5}; // data not valid when tx_port is over 4
 
     // Dump signals to VCD

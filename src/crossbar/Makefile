@@ -8,7 +8,7 @@ RTL_SRC := \
 
 .PHONY: comp
 comp:
-	verilator --binary --trace $(RTL_SRC) $(target)_tb.sv --top $(target)_tb
+	verilator --binary -j 6 --trace $(RTL_SRC) $(target)_tb.sv --top $(target)_tb
 
 .PHONY: sim
 sim:

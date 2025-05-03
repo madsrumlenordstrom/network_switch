@@ -21,33 +21,19 @@ module crossbar #(
   input  logic rstn_i,
 
   // RX Data and control
-  input  logic [7:0] rx_data0,
-  input  logic       rx_done0, // rx_done accompanies the last byte of data
-  input  logic [2:0] rx_dest0, // 0: tx0, 1: tx1, 2: tx2, 3: tx3, 4: broadcast, 5-7: not valid (data also not valid if dest == port)
-  input  logic [7:0] rx_data1,
-  input  logic       rx_done1,
-  input  logic [2:0] rx_dest1,
-  input  logic [7:0] rx_data2,
-  input  logic       rx_done2,
-  input  logic [2:0] rx_dest2,
-  input  logic [7:0] rx_data3,
-  input  logic       rx_done3,
-  input  logic [2:0] rx_dest3,
+  input  logic [3:0][7:0] rx_data,
+  input  logic [3:0]      rx_done, // rx_done accompanies the last byte of data
+  input  logic [3:0][2:0] rx_dest, // 0: tx0, 1: tx1, 2: tx2, 3: tx3, 4: broadcast, 5-7: not valid (data also not valid if dest == port)
 
   // TX Data and control
-  output logic [7:0] tx_data0,
-  output logic       tx_ctrl0, // tx_ctrl accompanies valid bytes of data
-  output logic [7:0] tx_data1,
-  output logic       tx_ctrl1,
-  output logic [7:0] tx_data2,
-  output logic       tx_ctrl2,
-  output logic [7:0] tx_data3,
-  output logic       tx_ctrl3
+  output logic [3:0][7:0] tx_data,
+  output logic [3:0]      tx_ctrl // tx_ctrl accompanies valid bytes of data
 );
 
   // ##########################################################################
   //  Signals 
   // ##########################################################################
+  // Requests and grants for arbiters (one set for each tx port)
   logic [3:0][2:0] requests_tx;
   logic [3:0][2:0] grants_tx;
 
@@ -139,7 +125,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc10_write),
-    .data_i({rx_done1,rx_data1}),
+    .data_i({rx_done[1],rx_data[1]}),
     .rd_i(vc10_read),
     .data_o(vc10_data),
     .fill_level_o(),
@@ -155,7 +141,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc20_write),
-    .data_i({rx_done2,rx_data2}),
+    .data_i({rx_done[2],rx_data[2]}),
     .rd_i(vc20_read),
     .data_o(vc20_data),
     .fill_level_o(),
@@ -171,7 +157,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc30_write),
-    .data_i({rx_done3,rx_data3}),
+    .data_i({rx_done[3],rx_data[3]}),
     .rd_i(vc30_read),
     .data_o(vc30_data),
     .fill_level_o(),
@@ -187,7 +173,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc01_write),
-    .data_i({rx_done0,rx_data0}),
+    .data_i({rx_done[0],rx_data[0]}),
     .rd_i(vc01_read),
     .data_o(vc01_data),
     .fill_level_o(),
@@ -203,7 +189,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc21_write),
-    .data_i({rx_done2,rx_data2}),
+    .data_i({rx_done[2],rx_data[2]}),
     .rd_i(vc21_read),
     .data_o(vc21_data),
     .fill_level_o(),
@@ -219,7 +205,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc31_write),
-    .data_i({rx_done3,rx_data3}),
+    .data_i({rx_done[3],rx_data[3]}),
     .rd_i(vc31_read),
     .data_o(vc31_data),
     .fill_level_o(),
@@ -235,7 +221,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc02_write),
-    .data_i({rx_done0,rx_data0}),
+    .data_i({rx_done[0],rx_data[0]}),
     .rd_i(vc02_read),
     .data_o(vc02_data),
     .fill_level_o(),
@@ -251,7 +237,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc12_write),
-    .data_i({rx_done1,rx_data1}),
+    .data_i({rx_done[1],rx_data[1]}),
     .rd_i(vc12_read),
     .data_o(vc12_data),
     .fill_level_o(),
@@ -267,7 +253,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc32_write),
-    .data_i({rx_done3,rx_data3}),
+    .data_i({rx_done[3],rx_data[3]}),
     .rd_i(vc32_read),
     .data_o(vc32_data),
     .fill_level_o(),
@@ -283,7 +269,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc03_write),
-    .data_i({rx_done0,rx_data0}),
+    .data_i({rx_done[0],rx_data[0]}),
     .rd_i(vc03_read),
     .data_o(vc03_data),
     .fill_level_o(),
@@ -299,7 +285,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc13_write),
-    .data_i({rx_done1,rx_data1}),
+    .data_i({rx_done[1],rx_data[1]}),
     .rd_i(vc13_read),
     .data_o(vc13_data),
     .fill_level_o(),
@@ -315,7 +301,7 @@ module crossbar #(
     .clk_i(clk_i),
     .rstn_i(rstn_i),
     .wr_i(vc23_write),
-    .data_i({rx_done2,rx_data2}),
+    .data_i({rx_done[2],rx_data[2]}),
     .rd_i(vc23_read),
     .data_o(vc23_data),
     .fill_level_o(),
@@ -323,56 +309,35 @@ module crossbar #(
     .full_o()
   );
   
-  // ARBITERS
-  // Arbiter for port tx0 
-  arbiter #(.P_WIDTH(3)) arbiter_tx0 (
-    .clk_i(clk_i),
-    .rstn_i(rstn_i),
-    .request_i(requests_tx[0]),
-    .grant_o(grants_tx[0])
-  );
-  // Arbiter for port tx1
-  arbiter #(.P_WIDTH(3)) arbiter_tx1 (
-    .clk_i(clk_i),
-    .rstn_i(rstn_i),
-    .request_i(requests_tx[1]),
-    .grant_o(grants_tx[1])
-  );
-  // Arbiter for port tx2
-  arbiter #(.P_WIDTH(3)) arbiter_tx2 (
-    .clk_i(clk_i),
-    .rstn_i(rstn_i),
-    .request_i(requests_tx[2]),
-    .grant_o(grants_tx[2])
-  );
-  // Arbiter for port tx3
-  arbiter #(.P_WIDTH(3)) arbiter_tx3 (
-    .clk_i(clk_i),
-    .rstn_i(rstn_i),
-    .request_i(requests_tx[3]),
-    .grant_o(grants_tx[3])
-  );
-
+  // ARBITERS (Generated for each tx port)
+  for (genvar i = 0; i < 4; i++) begin: g_arbiter
+    arbiter #(.P_WIDTH(3)) arbiter_tx (
+      .clk_i(clk_i),
+      .rstn_i(rstn_i),
+      .request_i(requests_tx[i]),
+      .grant_o(grants_tx[i])
+    );
+  end
 
   // ##########################################################################
   //  Combinational Logic
   // ##########################################################################
   // Place data into queues
-  assign vc01_write = ((rx_dest0 == 3'h1) || (rx_dest0 == 3'h4));
-  assign vc02_write = ((rx_dest0 == 3'h2) || (rx_dest0 == 3'h4));
-  assign vc03_write = ((rx_dest0 == 3'h3) || (rx_dest0 == 3'h4));
+  assign vc01_write = ((rx_dest[0] == 3'h1) || (rx_dest[0] == 3'h4));
+  assign vc02_write = ((rx_dest[0] == 3'h2) || (rx_dest[0] == 3'h4));
+  assign vc03_write = ((rx_dest[0] == 3'h3) || (rx_dest[0] == 3'h4));
 
-  assign vc10_write = ((rx_dest1 == 3'h0) || (rx_dest1 == 3'h4));
-  assign vc12_write = ((rx_dest1 == 3'h2) || (rx_dest1 == 3'h4));
-  assign vc13_write = ((rx_dest1 == 3'h3) || (rx_dest1 == 3'h4));
+  assign vc10_write = ((rx_dest[1] == 3'h0) || (rx_dest[1] == 3'h4));
+  assign vc12_write = ((rx_dest[1] == 3'h2) || (rx_dest[1] == 3'h4));
+  assign vc13_write = ((rx_dest[1] == 3'h3) || (rx_dest[1] == 3'h4));
 
-  assign vc20_write = ((rx_dest2 == 3'h0) || (rx_dest2 == 3'h4));
-  assign vc21_write = ((rx_dest2 == 3'h1) || (rx_dest2 == 3'h4));
-  assign vc23_write = ((rx_dest2 == 3'h3) || (rx_dest2 == 3'h4));
+  assign vc20_write = ((rx_dest[2] == 3'h0) || (rx_dest[2] == 3'h4));
+  assign vc21_write = ((rx_dest[2] == 3'h1) || (rx_dest[2] == 3'h4));
+  assign vc23_write = ((rx_dest[2] == 3'h3) || (rx_dest[2] == 3'h4));
 
-  assign vc30_write = ((rx_dest3 == 3'h0) || (rx_dest3 == 3'h4));
-  assign vc31_write = ((rx_dest3 == 3'h1) || (rx_dest3 == 3'h4));
-  assign vc32_write = ((rx_dest3 == 3'h2) || (rx_dest3 == 3'h4));
+  assign vc30_write = ((rx_dest[3] == 3'h0) || (rx_dest[3] == 3'h4));
+  assign vc31_write = ((rx_dest[3] == 3'h1) || (rx_dest[3] == 3'h4));
+  assign vc32_write = ((rx_dest[3] == 3'h2) || (rx_dest[3] == 3'h4));
 
   // Make requests for each port
   assign requests_tx[0] = {~vc30_empty & ~vc30_eof_delay, ~vc20_empty & ~vc20_eof_delay, ~vc10_empty & ~vc10_eof_delay};
@@ -391,77 +356,77 @@ module crossbar #(
     // Port Tx 0
     unique case (grants_tx[0])
       3'b001: begin // Grant from rx port 1
-        tx_data0 = vc10_data[7:0];
-        tx_ctrl0 = 1'b1;
+        tx_data[0] = vc10_data[7:0];
+        tx_ctrl[0] = 1'b1;
       end
       3'b010: begin // Grant from rx port 2
-        tx_data0 = vc20_data[7:0];
-        tx_ctrl0 = 1'b1;
+        tx_data[0] = vc20_data[7:0];
+        tx_ctrl[0] = 1'b1;
       end
       3'b100: begin // Grant from rx port 3
-        tx_data0 = vc30_data[7:0];
-        tx_ctrl0 = 1'b1;
+        tx_data[0] = vc30_data[7:0];
+        tx_ctrl[0] = 1'b1;
       end
       default: begin // No grant
-        tx_data0 = 8'b0;
-        tx_ctrl0 = 1'b0;
+        tx_data[0] = 8'b0;
+        tx_ctrl[0] = 1'b0;
       end
     endcase
     // Port Tx 1
     unique case (grants_tx[1])
       3'b001: begin // Grant from rx port 0
-        tx_data1 = vc01_data[7:0];
-        tx_ctrl1 = 1'b1;
+        tx_data[1] = vc01_data[7:0];
+        tx_ctrl[1] = 1'b1;
       end
       3'b010: begin // Grant from rx port 2
-        tx_data1 = vc21_data[7:0];
-        tx_ctrl1 = 1'b1;
+        tx_data[1] = vc21_data[7:0];
+        tx_ctrl[1] = 1'b1;
       end
       3'b100: begin // Grant from rx port 3
-        tx_data1 = vc31_data[7:0];
-        tx_ctrl1 = 1'b1;
+        tx_data[1] = vc31_data[7:0];
+        tx_ctrl[1] = 1'b1;
       end
       default: begin // No grant
-        tx_data1 = 8'b0;
-        tx_ctrl1 = 1'b0;
+        tx_data[1] = 8'b0;
+        tx_ctrl[1] = 1'b0;
       end
     endcase
     // Port Tx 2
     unique case (grants_tx[2])
       3'b001: begin // Grant from rx port 0
-        tx_data2 = vc02_data[7:0];
-        tx_ctrl2 = 1'b1;
+        tx_data[2] = vc02_data[7:0];
+        tx_ctrl[2] = 1'b1;
       end
       3'b010: begin // Grant from rx port 1
-        tx_data2 = vc12_data[7:0];
-        tx_ctrl2 = 1'b1;
+        tx_data[2] = vc12_data[7:0];
+        tx_ctrl[2] = 1'b1;
       end
       3'b100: begin // Grant from rx port 3
-        tx_data2 = vc32_data[7:0];
-        tx_ctrl2 = 1'b1;
+        tx_data[2] = vc32_data[7:0];
+        tx_ctrl[2] = 1'b1;
       end
       default: begin // No grant
-        tx_data2 = 8'b0;
-        tx_ctrl2 = 1'b0;
+        tx_data[2] = 8'b0;
+        tx_ctrl[2] = 1'b0;
       end
     endcase
     // Port Tx 3
     unique case (grants_tx[3])
       3'b001: begin // Grant from rx port 0
-        tx_data3 = vc03_data[7:0];
-        tx_ctrl3 = 1'b1;
+        tx_data[3] = vc03_data[7:0];
+        tx_ctrl[3] = 1'b1;
       end
       3'b010: begin // Grant from rx port 1
-        tx_data3 = vc13_data[7:0];
-        tx_ctrl3 = 1'b1;
+        tx_data[3] = vc13_data[7:0];
+        tx_ctrl[3] = 1'b1;
       end
       3'b100: begin // Grant from rx port 2
-        tx_data3 = vc23_data[7:0];
-        tx_ctrl3 = 1'b1;
+        tx_data[3] = vc23_data[7:0];
+        tx_ctrl[3] = 1'b1;
       end
       default: begin // No grant
-        tx_data3 = 8'b0;
-        tx_ctrl3 = 1'b0;
+        tx_data[3] = 8'b0;
+        tx_ctrl[3] = 1'b0;
       end
     endcase
   end
