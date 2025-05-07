@@ -89,7 +89,7 @@ module crossbar #(
   always_comb begin
     for (int tx = 0; tx < 4; tx++) begin: tx_comb
       for (int rx_idx = 0; rx_idx < 3; rx_idx++) begin: rx_comb
-        int rx_p = (rx_idx>=tx) ? (rx_idx+1) : rx_idx; // As above, avoid queues where ports rx = tx
+        automatic int rx_p = (rx_idx>=tx) ? (rx_idx+1) : rx_idx; // As above, avoid queues where ports rx = tx (Automatic is needed to ensure lifetime is limited to this block)
       
         // Place data into queues
         vc_write[rx_idx][tx] = ((rx_dest[rx_p] == (3)'(tx)) || (rx_dest[rx_p] == 3'h4));
