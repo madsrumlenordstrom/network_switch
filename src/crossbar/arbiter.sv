@@ -23,7 +23,7 @@ module arbiter #(
 
   // Carry
   always_comb begin // Avoid cyclic carry_chain chain, double the arbiter slices and OR outputs
-    for (int i = 0; i < (P_WIDTH*2-1); i++) begin
+    for (int i = 0; i < (P_WIDTH*2); i++) begin
       if (i == 0) carry_chain[i] = 0; // Carry lsb is always 0
       else        carry_chain[i] = (~request_i[(i-1)%P_WIDTH] & (carry_chain[i-1] | cur_priority[(i-1)%P_WIDTH]));
       // Modulo P_WIDTH used for indexing because the doubled (unfolded) carry chain (prio and req indexing will start over))
