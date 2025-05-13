@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Stratix IV"
 set_global_assignment -name DEVICE EP4SGX230KF40C2
-set_global_assignment -name TOP_LEVEL_ENTITY "network_switch"
+set_global_assignment -name TOP_LEVEL_ENTITY "switchcore_top"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 23.1STD.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:36:19  FEBRUARY 20, 2025"
 set_global_assignment -name LAST_QUARTUS_VERSION "23.1std.1 Standard Edition"
@@ -51,10 +51,22 @@ set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 
 set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
-set_global_assignment -name SYSTEMVERILOG_FILE "src/network_switch.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/async_fifo.sv"
-set_global_assignment -name SYSTEMVERILOG_FILE "src/data_synchronizer.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/binary_to_gray.sv"
-set_global_assignment -name SYSTEMVERILOG_FILE "src/gray_to_binary.sv"
-set_global_assignment -name SYSTEMVERILOG_FILE "src/fcs_check_serial.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/data_synchronizer.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/fcs_check_parallel.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/fcs_check_serial.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/gray_to_binary.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/network_switch.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/switchcore.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/crossbar/arbiter.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/crossbar/crossbar.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/sync_fifo_core/sdp_1clk_ram.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/sync_fifo_core/sync_fifo_core.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/demux1to2.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/demux1to4.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/fcs_check.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/mux4to1.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/switchcore_top.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/trash_control.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/mac_learning/mac_learning.sv"

@@ -1,7 +1,6 @@
 `timescale 1ns / 1ps
-// This module has the same name and port map as the (dummy) switchcore in the De4_SWitch project
 
-module switchcore #(
+module switchcore_top #(
     parameter int P_ADDR_WIDTH = 7
   ) (
     input  logic                         clk,
@@ -12,32 +11,6 @@ module switchcore #(
     input  logic [31:0]                  rx_data,   // [7:0]=RXD0 ... [31:24]=RXD3
     input  logic [3:0]                   rx_ctrl    // 0=RXC0 ... 3=RXC3
   );
-
-  ///////////////////////////////////////////////////////////////////////////////
-  // SIGNALS
-  ///////////////////////////////////////////////////////////////////////////////
-
-  //--------------------------------------------------------------------------
-  // Signals for crossbar
-  //--------------------------------------------------------------------------
-  logic [7:0]     rx_data0;
-  logic [7:0]     rx_data1;
-  logic [7:0]     rx_data2;
-  logic [7:0]     rx_data3;
-  logic [7:0]     tx_data0;
-  logic [7:0]     tx_data1;
-  logic [7:0]     tx_data2;
-  logic [7:0]     tx_data3;
-
-  assign rx_data0 = rx_data[7:0];
-  assign rx_data1 = rx_data[15:8];
-  assign rx_data2 = rx_data[23:16];
-  assign rx_data3 = rx_data[31:24];
-
-  assign tx_data[7:0]   = tx_data0;
-  assign tx_data[15:8]  = tx_data1;
-  assign tx_data[23:16] = tx_data2;
-  assign tx_data[31:24] = tx_data3;
 
   //--------------------------------------------------------------------------
   // Clock & Reset
@@ -50,7 +23,6 @@ module switchcore #(
   //--------------------------------------------------------------------------
   // FCS-check nets (one bit per of 4 lanes)
   //--------------------------------------------------------------------------
-  logic [7:0]  data_in        [3:0];
   logic [2:0]  dst_port_in    [3:0];
   logic [1:0]  fcs_error      [3:0];
   logic        en_crossbar_fifo_read [3:0];
@@ -64,12 +36,6 @@ module switchcore #(
   logic [2:0]  dst_port_out   [3:0];
   logic        done_in        [3:0];
 
-  assign data_in[0] = rx_data0;
-  assign data_in[1] = rx_data1;
-  assign data_in[2] = rx_data2;
-  assign data_in[3] = rx_data3;
-
-
   //--------------------------------------------------------------------------
   // Signals for FIFO control between FCS-check and crossbar
   //--------------------------------------------------------------------------
@@ -79,6 +45,9 @@ module switchcore #(
   logic        empty_o_fcs [3:0]; // Maybe not needed
   logic        full_o_fcs  [3:0]; // Maybe not needed
 
+  logic [3:0][7:0] rx_data_tmp;
+  logic [3:0]      rx_done_tmp;
+  logic [3:0][2:0] rx_dest_tmp;
 
   //--------------------------------------------------------------------------
   // Signals for FIFO control between FCS-check and mac learning
@@ -97,7 +66,6 @@ module switchcore #(
   logic sel [3:0];
   logic [2:0] rx_dst_port [3:0];
 
-
   //--------------------------------------------------------------------------
   // Signals for demuxing the data from the FCS check
   //--------------------------------------------------------------------------
@@ -109,7 +77,6 @@ module switchcore #(
   logic        busy_mac;
   wire  [3:0]  arb_request = ~empty_o_mac & {4{~busy_mac}};
 
-
   //--------------------------------------------------------------------------
   // Signals for muxing the data from the MAC learning
   //--------------------------------------------------------------------------
@@ -117,20 +84,12 @@ module switchcore #(
   logic [47:0] dst_mac_mux;
   logic [2:0]  src_port_mux;
 
-
-
   //------------------------------------------------------------------------
   // Signals for MAC learning
   //------------------------------------------------------------------------
   logic [2:0]  dst_port_mac;
   logic        done_mac;
   logic [1:0]  tag_port;
-
-
-  //--------------------------------------------------------------------------
-  // Signals for demuxing the data from the MAC learning
-  //--------------------------------------------------------------------------
-
 
   ///////////////////////////////////////////////////////////////////////////////
   // MODULE INSTANTIATIONS
@@ -145,7 +104,7 @@ module switchcore #(
                   .clk            (clk),
                   .reset          (reset),
                   .rx_ctrl        (rx_ctrl[i]),
-                  .data_in        (data_in[i]),
+                  .data_in        (rx_data[(i*8) + 7:i*8]),
                   .done_in        (done_in[i]),
                   .dst_port_in    (dst_port_in[i]),
                   .fcs_error      (fcs_error[i]),
@@ -199,7 +158,6 @@ module switchcore #(
                       .rx_dst_port(rx_dst_port[i])
                     );
 
-
       // 4 x Demux for the FCS check
       demux1to2 demux_fcs_out (
                   .din(data_fifo_fcs_out[i]),
@@ -208,37 +166,21 @@ module switchcore #(
                   .trash() // Not used
                 );
 
+      assign rx_data_tmp[i] = data_fifo_demux_out[i][7:0];
+      assign rx_done_tmp[i] = data_fifo_demux_out[i][8];
+      assign rx_dest_tmp[i] = rx_dst_port[i];
     end
-
   endgenerate
 
-  // 1 x Crossbar
   crossbar #(.P_QUEUE_ADDR_WIDTH(11)) crossbar_module (
              .clk_i(clk),
              .rstn_i(reset),
-             .rx_dest0(rx_dst_port[0]),
-             .rx_dest1(rx_dst_port[1]),
-             .rx_dest2(rx_dst_port[2]),
-             .rx_dest3(rx_dst_port[3]),
-             .rx_data0(data_fifo_demux_out[0][7:0]),
-             .rx_data1(data_fifo_demux_out[1][7:0]),
-             .rx_data2(data_fifo_demux_out[2][7:0]),
-             .rx_data3(data_fifo_demux_out[3][7:0]),
-             .rx_done0(data_fifo_demux_out[0][8]),
-             .rx_done1(data_fifo_demux_out[1][8]),
-             .rx_done2(data_fifo_demux_out[2][8]),
-             .rx_done3(data_fifo_demux_out[3][8]),
-             .tx_data0(tx_data0),
-             .tx_data1(tx_data1),
-             .tx_data2(tx_data2),
-             .tx_data3(tx_data3),
-             .tx_ctrl0(tx_ctrl[0]),
-             .tx_ctrl1(tx_ctrl[1]),
-             .tx_ctrl2(tx_ctrl[2]),
-             .tx_ctrl3(tx_ctrl[3])
+             .rx_data(rx_data_tmp),
+             .rx_done(rx_done_tmp),
+             .rx_dest(rx_dest_tmp),
+             .tx_data(tx_data),
+             .tx_ctrl(tx_ctrl)
            );
-
-
 
   // 1 x Arbiter for the MAC learning
   arbiter #(.P_WIDTH(4)) fifo_arb (
@@ -257,8 +199,6 @@ module switchcore #(
             .in3(data_mac_fifo_out[3]),
             .out({src_mac_mux, dst_mac_mux, src_port_mux})
           );
-
-
 
   // 1 x Mac learning
   mac_learning #( .TIMER_SIZE(30) ) m_learn_module (
@@ -283,21 +223,4 @@ module switchcore #(
               .data_out2({done_in[2], dst_port_in[2]}),
               .data_out3({done_in[3], dst_port_in[3]})
             );
-
-
-
 endmodule
-
-
-
-
-
-
-
-
-
-
-
-
-
-
