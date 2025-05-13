@@ -1,7 +1,7 @@
-target ?= switchcore_top
+target ?= switchcore
 
 SV_SRCS := \
-	switchcore_top.sv \
+	switchcore.sv \
 	demux1to2.sv \
 	demux1to4.sv \
 	fcs_check.sv \
@@ -13,7 +13,7 @@ SV_SRCS := \
 	$(wildcard ../sync_fifo_core/*.sv) \
 
 	
-TB_SRC  := switchcore_top_tb.sv
+TB_SRC  := switchcore_tb.sv
 
 .PHONY: comp
 comp:

@@ -1,5 +1,5 @@
 PROJECT := network_switch
-TOP_MODULE ?= switchcore_top
+TOP_MODULE ?= switchcore
 TEST_MODULE ?= network_switch_tb
 
 SRC_DIR = src

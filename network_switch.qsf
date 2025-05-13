@@ -39,7 +39,7 @@
 
 set_global_assignment -name FAMILY "Stratix IV"
 set_global_assignment -name DEVICE EP4SGX230KF40C2
-set_global_assignment -name TOP_LEVEL_ENTITY "switchcore_top"
+set_global_assignment -name TOP_LEVEL_ENTITY "switchcore"
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 23.1STD.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "17:36:19  FEBRUARY 20, 2025"
 set_global_assignment -name LAST_QUARTUS_VERSION "23.1std.1 Standard Edition"
@@ -67,6 +67,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/demux1to2.sv
 set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/demux1to4.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/fcs_check.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/mux4to1.sv"
-set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/switchcore_top.sv"
+set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/switchcore.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/ethernet_switch/trash_control.sv"
 set_global_assignment -name SYSTEMVERILOG_FILE "src/mac_learning/mac_learning.sv"

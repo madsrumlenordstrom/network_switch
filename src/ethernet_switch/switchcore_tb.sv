@@ -1,6 +1,6 @@
 `timescale 1ns/1ps
 
-module switchcore_top_tb;
+module switchcore_tb;
   // Parameters
   parameter int P_ADDR_WIDTH = 7;
 

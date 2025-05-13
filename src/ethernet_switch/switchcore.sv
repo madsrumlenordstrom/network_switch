@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module switchcore_top #(
+module switchcore #(
     parameter int P_ADDR_WIDTH = 7
   ) (
     input  logic                         clk,
