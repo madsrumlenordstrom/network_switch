@@ -22,7 +22,7 @@ module dual_port_bram #(
   // change "M10K" to "M9K" or "MLAB" if you prefer a different block
   (* ramstyle = "M10K" *) logic [DATA_WIDTH-1:0] ram [0:DEPTH-1];
 
-  // Compute effective BRAM addresses by modulo (achieve the same by bit‐masking with depth‐1)
+  // Compute effective BRAM addresses by modulo
   wire [31:0] addr_a_full = addra & (DEPTH-1);
   wire [BRAM_WIDTH-1:0] addr_a = addr_a_full[BRAM_WIDTH-1:0];
   
@@ -120,29 +120,44 @@ module mac_learning#(
                  );
 
 
-  logic [31:0] hash_accum;
-
-  always_comb
-  begin
-    hash_accum = FNV_OFFSET;
-    for (int i = 5; i >= 0; i--)
-    begin
-      hash_accum = ((hash_accum ^ src_mac_reg[i*8 +: 8]) * FNV_PRIME) & 32'hFFFFFFFF;
-    end
-    new_src_hash = hash_accum;
-
-
-    hash_accum = FNV_OFFSET;
-    for (int i = 5; i >= 0; i--)
-    begin
-      hash_accum = ((hash_accum ^ dst_mac_reg[i*8 +: 8]) * FNV_PRIME) & 32'hFFFFFFFF;
-    end
-    new_dst_hash = hash_accum;
-  end
-
+  logic [31:0] hash_p0_src, hash_p1_src;
+  logic [31:0] hash_p0_dst, hash_p1_dst;
+  logic done_hashing;
+  logic begin_hashing;
+  logic [2:0] count_hash;
   
-   
+	
   
+	always_ff @(posedge clk) begin
+	  if (begin_hashing && !done_hashing ) begin
+		 hash_p0_src <= ((FNV_OFFSET ^ src_mac_reg[5*8 +:8])
+								* FNV_PRIME ^ src_mac_reg[4*8 +:8])
+							  * FNV_PRIME & 32'hFFFFFFFF;
+		 hash_p0_dst <= ((FNV_OFFSET ^ dst_mac_reg[5*8 +:8])
+								* FNV_PRIME ^ dst_mac_reg[4*8 +:8])
+							  * FNV_PRIME & 32'hFFFFFFFF;
+		 hash_p1_src <= ((hash_p0_src ^ src_mac_reg[3*8 +:8])
+                   * FNV_PRIME ^ src_mac_reg[2*8 +:8])
+                  * FNV_PRIME & 32'hFFFFFFFF;
+       hash_p1_dst <= ((hash_p0_dst ^ dst_mac_reg[3*8 +:8])
+                   * FNV_PRIME ^ dst_mac_reg[2*8 +:8])
+                  * FNV_PRIME & 32'hFFFFFFFF;
+		 new_src_hash  <= ((hash_p1_src ^ src_mac_reg[1*8 +:8])
+                     * FNV_PRIME ^ src_mac_reg[0*8 +:8])
+                    * FNV_PRIME & 32'hFFFFFFFF;
+       new_dst_hash  <= ((hash_p1_dst ^ dst_mac_reg[1*8 +:8])
+                     * FNV_PRIME ^ dst_mac_reg[0*8 +:8])
+                    * FNV_PRIME & 32'hFFFFFFFF;
+		 if (count_hash < 2)
+			count_hash <= count_hash + 1;
+		 else
+			done_hashing <= 1;
+	  end else begin
+		 done_hashing <= 0;
+		 count_hash <= 0;
+	  end
+	end
+    
   
   enum logic [1:0] {IDLE_, LOOKUP, FORWARD, LEARN} learning_state_t;
   enum logic [1:0] {IDLE, READ, CHECK, CLEAR} sweep_state_t;
@@ -247,7 +262,9 @@ module mac_learning#(
         end
         LOOKUP:
         begin
-          learning_state_t <= FORWARD;
+		    begin_hashing <= 1;
+			 if (done_hashing)
+				learning_state_t <= FORWARD;
         end
         FORWARD:
         begin
