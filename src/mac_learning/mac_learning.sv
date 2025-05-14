@@ -22,11 +22,11 @@ module dual_port_bram #(
   // change "M10K" to "M9K" or "MLAB" if you prefer a different block
   (* ramstyle = "M10K" *) logic [DATA_WIDTH-1:0] ram [0:DEPTH-1];
 
-  // Compute effective BRAM addresses by modulo
-  wire [31:0] addr_a_full = addra % DEPTH;
+  // Compute effective BRAM addresses by modulo (achieve the same by bit‐masking with depth‐1)
+  wire [31:0] addr_a_full = addra & (DEPTH-1);
   wire [BRAM_WIDTH-1:0] addr_a = addr_a_full[BRAM_WIDTH-1:0];
   
-  wire [31:0] addr_b_full = addrb % DEPTH;
+  wire [31:0] addr_b_full = addrb & (DEPTH-1);
   wire [BRAM_WIDTH-1:0] addr_b = addr_b_full[BRAM_WIDTH-1:0];
 
   // Single‐clock dual‐port: write and read can happen in same cycle
