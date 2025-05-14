@@ -12,7 +12,7 @@ module crossbar #(
   parameter int P_QUEUE_ADDR_WIDTH = 12 // Address width for the queues (Default (currently): 12 , 2^12 = 4096)
 ) (
   input  logic clk_i,
-  input  logic rstn_i,
+  input  logic rst_i,
 
   // RX Data and control
   input  logic [3:0][7:0] rx_data,
@@ -62,7 +62,7 @@ module crossbar #(
           .P_FWFT(1)
         ) u_sync_fifo_core (
           .clk_i(clk_i),
-          .rstn_i(rstn_i),
+          .rst_i(rst_i),
           .wr_i(vc_write[rx_idx][tx]),
           .data_i({rx_done[rx_p],rx_data[rx_p]}),
           .rd_i(vc_read[rx_idx][tx]),
@@ -76,7 +76,7 @@ module crossbar #(
       // Instantiate the arbiters for each tx port
       arbiter #(.P_WIDTH(3)) arbiter_tx (
         .clk_i(clk_i),
-        .rstn_i(rstn_i),
+        .rst_i(rst_i),
         .request_i(requests_tx[tx]),
         .grant_o(grants_tx[tx])
       );
@@ -135,7 +135,7 @@ module crossbar #(
   //  Sequential Logic (delay for eof)
   // ############################################################################
   always_ff @(posedge clk_i) begin
-    if (!rstn_i) begin
+    if (rst_i) begin
       vc_eof_delay <= 0; // Reset all eof delay signals
       tx_delay_countdown <= 0; // Reset all delay countdowns
     end else begin // explanaition of rx ports see reset case

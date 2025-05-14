@@ -7,14 +7,14 @@ module arbiter_tb;
   localparam integer WIDTH = 3;
   logic [WIDTH-1:0] request;
   logic [WIDTH-1:0] grant;
-  logic clk, rstn;
+  logic clk, rst;
 
   // ############################################################################
   //  Arbiter instance
   // ############################################################################
   arbiter u_arbiter (
     .clk_i(clk),
-    .rstn_i(rstn),
+    .rst_i(rst),
     .request_i(request),
     .grant_o(grant)
   );
@@ -29,11 +29,16 @@ module arbiter_tb;
   //  Test sequence
   // ############################################################################
   initial begin
-    clk = 0;
-    rstn = 0;
-    request  = '0;
-    #20 rstn = 1;
     $display("######## Test started ########");
+    clk = 0;
+    rst = 1;
+    request  = '0;
+    #20 rst = 0;
+
+    // Dump signals to VCD
+    $dumpfile("dump.vcd");
+    $dumpvars(0, crossbar_tb);
+
     $display("Inputs on rising edge of clock");
     @(posedge clk) request = 'b111;
 
@@ -57,6 +62,11 @@ module arbiter_tb;
     #100 $display("######## Test complete ########");
     $finish;
 
+  end
+
+  always begin // Assert maximum one grant
+    assert ($countones(grant) <= 1) else
+    $display("Error: More than one grant signal is high, Grant: %b", grant);
   end
 
 endmodule

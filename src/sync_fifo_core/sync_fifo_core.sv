@@ -5,7 +5,7 @@ module sync_fifo_core #(
 ) (
   // Clock & Reset
   input  logic clk_i,
-  input  logic rstn_i,
+  input  logic rst_i,
   // Control & Data
   input  logic wr_i,
   input  logic [P_DATA_WIDTH-1:0] data_i,
@@ -52,7 +52,7 @@ module sync_fifo_core #(
       assign rd_fifo_mem = ((rd_i | empty_o) & has_data);
 
       always_ff @(posedge clk_i) begin
-        if (!rstn_i) begin
+        if (rst_i) begin
           empty_o <= 1;
         end else begin
           if (rd_fifo_mem) begin
@@ -72,7 +72,7 @@ module sync_fifo_core #(
 
   // Sequential logic
   always_ff @(posedge clk_i) begin
-    if (!rstn_i) begin
+    if (rst_i) begin
       wr_ptr <= 0; 
       rd_ptr <= 0;
     end else begin

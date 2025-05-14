@@ -9,7 +9,7 @@ module arbiter #(
   parameter int P_WIDTH = 3 // Number of requests
 ) (
   input  logic               clk_i,
-  input  logic               rstn_i,
+  input  logic               rst_i,
   input  logic [P_WIDTH-1:0] request_i,
   output logic [P_WIDTH-1:0] grant_o
 );
@@ -42,7 +42,7 @@ module arbiter #(
 
   // Sequential
   always_ff @(posedge clk_i) begin
-    if(!rstn_i) begin
+    if(rst_i) begin
       last_grant   <= 0;
       cur_priority <= 1; // Reset priority to ..01
     end else begin

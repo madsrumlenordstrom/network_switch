@@ -11,7 +11,7 @@ module sync_fifo_core_tb;
 
   // Clocks and reset
   logic clk_i = 0;
-  logic rstn_i = 0;
+  logic rst_i = 1;
 
   logic                    wr_i = 0;
   logic [P_ADDR_WIDTH:0]   fill_level_o;
@@ -27,7 +27,7 @@ module sync_fifo_core_tb;
     .P_FWFT(P_FWFT)
   ) u_sync_fifo_core(
     .clk_i(clk_i),
-    .rstn_i(rstn_i),
+    .rst_i(rst_i),
     .wr_i(wr_i),
     .data_i(data_i),
     .rd_i(rd_i),
@@ -46,14 +46,14 @@ module sync_fifo_core_tb;
   int burst_len;
   int fifo_free_space;
 
-  assign rd_i = ~empty_o & rstn_i; // Always read when data present in FIFO
+  assign rd_i = ~empty_o & ~rst_i; // Always read when data present in FIFO
 
   initial begin
     // Dump Waveform
     $dumpfile("dump.vcd");
     $dumpvars();
     $display("############## SIM STARTED  ##############");
-    #(PERIOD_A*2) rstn_i = 1;
+    #(PERIOD_A*2) rst_i = 0;
     $display("############# RESET RELEASED #############");
     #(PERIOD_A*3);
 
@@ -118,7 +118,7 @@ module sync_fifo_core_tb;
     for(int i = 0; i<burst_len; i++) begin
       write_data = (P_DATA_WIDTH)'($urandom());
       data_i = write_data;
-      if (!full_o) begin
+      if (ref_fifo.size()<(2**P_ADDR_WIDTH-1)) begin // Check against reference model
         ref_fifo.push_front(write_data); // Don't add to ref model if FIFO full
         total_written++;
       end

@@ -17,7 +17,7 @@ module crossbar_tb;
 
   // Module Signals
   logic clk_i;
-  logic rstn_i;
+  logic rst_i;
 
   // RX Data and control
   logic [3:0][7:0] rx_data; // 4 RX ports, 8b data
@@ -131,7 +131,7 @@ module crossbar_tb;
     .P_QUEUE_ADDR_WIDTH(P_QUEUE_ADDR_WIDTH)
   ) u_crossbar (
     .clk_i(clk_i),
-    .rstn_i(rstn_i),
+    .rst_i(rst_i),
     .rx_data(rx_data),
     .rx_done(rx_done),
     .rx_dest(rx_dest),
@@ -146,7 +146,7 @@ module crossbar_tb;
   initial begin
     // Initialize signals
     clk_i = 0;
-    rstn_i = 0;
+    rst_i = 1;
     rx_data = 0;
     rx_done = 0;
     rx_dest = '{default: 5}; // data not valid when tx_port is over 4
@@ -157,7 +157,7 @@ module crossbar_tb;
 
     // Pull Reset
     $display("############## SIM STARTED  ##############");
-    #(P_PERIOD*2) rstn_i = 1;
+    #(P_PERIOD*2) rst_i = 0;
     $display("############# RESET RELEASED #############");
 
 
