@@ -130,24 +130,12 @@ module mac_learning#(
   
 	always_ff @(posedge clk) begin
 	  if (begin_hashing && !done_hashing ) begin
-		 hash_p0_src <= ((FNV_OFFSET ^ src_mac_reg[5*8 +:8])
-								* FNV_PRIME ^ src_mac_reg[4*8 +:8])
-							  * FNV_PRIME & 32'hFFFFFFFF;
-		 hash_p0_dst <= ((FNV_OFFSET ^ dst_mac_reg[5*8 +:8])
-								* FNV_PRIME ^ dst_mac_reg[4*8 +:8])
-							  * FNV_PRIME & 32'hFFFFFFFF;
-		 hash_p1_src <= ((hash_p0_src ^ src_mac_reg[3*8 +:8])
-                   * FNV_PRIME ^ src_mac_reg[2*8 +:8])
-                  * FNV_PRIME & 32'hFFFFFFFF;
-       hash_p1_dst <= ((hash_p0_dst ^ dst_mac_reg[3*8 +:8])
-                   * FNV_PRIME ^ dst_mac_reg[2*8 +:8])
-                  * FNV_PRIME & 32'hFFFFFFFF;
-		 new_src_hash  <= ((hash_p1_src ^ src_mac_reg[1*8 +:8])
-                     * FNV_PRIME ^ src_mac_reg[0*8 +:8])
-                    * FNV_PRIME & 32'hFFFFFFFF;
-       new_dst_hash  <= ((hash_p1_dst ^ dst_mac_reg[1*8 +:8])
-                     * FNV_PRIME ^ dst_mac_reg[0*8 +:8])
-                    * FNV_PRIME & 32'hFFFFFFFF;
+		 hash_p0_src <= ((FNV_OFFSET ^ src_mac_reg[5*8 +:8]) * FNV_PRIME ^ src_mac_reg[4*8 +:8]) * FNV_PRIME & 32'hFFFFFFFF;
+		 hash_p0_dst <= ((FNV_OFFSET ^ dst_mac_reg[5*8 +:8]) * FNV_PRIME ^ dst_mac_reg[4*8 +:8]) * FNV_PRIME & 32'hFFFFFFFF;
+		 hash_p1_src <= ((hash_p0_src ^ src_mac_reg[3*8 +:8]) * FNV_PRIME ^ src_mac_reg[2*8 +:8]) * FNV_PRIME & 32'hFFFFFFFF;
+       hash_p1_dst <= ((hash_p0_dst ^ dst_mac_reg[3*8 +:8]) * FNV_PRIME ^ dst_mac_reg[2*8 +:8]) * FNV_PRIME & 32'hFFFFFFFF;
+		 new_src_hash  <= ((hash_p1_src ^ src_mac_reg[1*8 +:8]) * FNV_PRIME ^ src_mac_reg[0*8 +:8]) * FNV_PRIME & 32'hFFFFFFFF;
+       new_dst_hash  <= ((hash_p1_dst ^ dst_mac_reg[1*8 +:8]) * FNV_PRIME ^ dst_mac_reg[0*8 +:8]) * FNV_PRIME & 32'hFFFFFFFF;
 		 if (count_hash < 2)
 			count_hash <= count_hash + 1;
 		 else
