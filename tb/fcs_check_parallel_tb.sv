@@ -53,34 +53,31 @@ module fcs_check_parallel_tb;
     // Clock Generation
     always #(CLK_PERIOD / 2) clk = ~clk;
 
-    task automatic transmit_packet(input byte data[]);
-        begin
-            for (byte_index = 0; byte_index < data.size(); byte_index++) begin
-                if (byte_index == 0) begin
-                    start_of_frame = 1;
-                end else if (byte_index == (data.size() - 4)) begin
-                    end_of_frame = 1;
-                end else begin
-                    start_of_frame = 0;
-                    end_of_frame = 0;
-                end
-                data_in = data[byte_index];
-                @(negedge clk);
-                // $display("Time: %t | Data In: %h | Start: %b | End: %b | FCS Error: %b", 
-                //          $time, data_in, start_of_frame, end_of_frame, fcs_error);
-            end
-            if (fcs_error)
-                $display("CRC Error Detected!");
-            else
-                $display("Frame Passed CRC Check!");
-            #CLK_PERIOD;
+task automatic transmit_packet(input byte data[]);
+    begin
+        for (byte_index = 0; byte_index < data.size(); byte_index++) begin
+            @(negedge clk); // Wait for the clock first
+
+            // Set signals for current cycle
+            data_in = data[byte_index];
+            start_of_frame = (byte_index == 0);
+            end_of_frame   = (byte_index == data.size() - 4); // assuming last 4 bytes are FCS
         end
-    endtask
+
+        // Hold signals low after transmission
+        @(negedge clk);
+        start_of_frame = 0;
+        end_of_frame = 0;
+
+        if (fcs_error)
+            $display("CRC Error Detected!");
+        else
+            $display("Frame Passed CRC Check!");
+    end
+endtask
 
     // Test Sequence
     initial begin
-        $dumpfile("fcs_check_parallel_tb.vcd");
-        $dumpvars();
         // Initialize Signals
         clk = 0;
         reset = 1;

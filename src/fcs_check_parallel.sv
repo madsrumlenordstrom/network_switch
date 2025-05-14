@@ -64,6 +64,7 @@ module fcs_check_parallel (
     always_ff@(posedge clk or posedge reset) begin
         if(reset) begin
             state <= idle;
+            fcs_reg <= 0;
         end else begin
             state <= next_state;
             if (start_of_frame || state != idle && next_state != idle) begin

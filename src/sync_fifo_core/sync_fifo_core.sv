@@ -21,6 +21,8 @@ module sync_fifo_core #(
   logic [P_ADDR_WIDTH:0] rd_ptr;
   logic wr_fifo_mem;
   logic rd_fifo_mem;
+  wire [P_DATA_WIDTH-1:0] data_raw;
+ 
 
   // Memory module instantiation
   sdp_1clk_ram #(

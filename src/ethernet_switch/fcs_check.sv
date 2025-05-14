@@ -7,13 +7,12 @@ module fcs_check #(
     input logic reset,
     input logic rx_ctrl,     // Arrival of start of frame in frame and end of frame
     input logic [7:0] data_in,      // Bytes transmitted
-    input logic done_in,
     input logic [2:0] dst_port_in,  // Destination port from the
     output logic [1:0] fcs_error,         // Indicates an error , functions as enable signal
-    output logic en_crossbar_fifo_read, // Write enable signal for the crossbar
+    output logic en_crossbar_fifo_write, // Write enable signal for the crossbar
 
     // Added signals
-    output logic en_mac_fifo_read,      // Read enable signal for the FIFO
+    output logic en_mac_fifo_write,      // Read enable signal for the FIFO
     output logic [47:0] dst_mac,    // Destination MAC address
     output logic [47:0] src_mac,    // Source MAC address
     output logic [2:0] src_port,    // Source port
@@ -25,13 +24,16 @@ module fcs_check #(
   logic [31:0] fcs_reg;
   logic [1:0] complement_counter;
   logic [7:0] data;
-  logic start_of_frame;
-  logic end_of_frame;
+  wire start_of_frame;
+  wire end_of_frame;
 
 
   assign dst_port_out = dst_port_in;
   assign src_port = P_SRC_PORT;
   assign rx_done = end_of_frame;
+  
+  
+  
   assign data_out = data;
 
   enum int unsigned {idle, complement_start, process_middle, complement_end} state, next_state;
@@ -51,27 +53,25 @@ module fcs_check #(
       byte_count   <= 4'd0;
       dst_mac      <= 48'd0;
       src_mac      <= 48'd0;
+      
     end
     else
     begin
       prev_rx_ctrl <= rx_ctrl;
       if (start_of_frame)
       begin // Sample the first byte
-        byte_count <= 0;
+        byte_count <= 1;
         dst_mac    <= {40'h0, data_in};
         src_mac    <= 0;
       end
-      else if (byte_count != 0 && byte_count < 12)
+      else if (byte_count != 0 && byte_count < 14)
       begin // Sample the next 11 bytes
         if (byte_count < 6)
           dst_mac <= {dst_mac[39:0], data_in};
-        else
+        else if (byte_count < 12)
           src_mac <= {src_mac[39:0], data_in};
-        byte_count <= byte_count + 1;
-      end // Continue counting
-      else
-      begin
-        byte_count <= byte_count + 1;
+        if (byte_count < 14)
+            byte_count <= byte_count + 1;
       end
     end
 
@@ -79,8 +79,8 @@ module fcs_check #(
 
   always_comb
   begin
-    en_crossbar_fifo_read = (byte_count > 13 && state == process_middle);
-    en_mac_fifo_read = (byte_count == 12); // Enable pulse for the MAC learning
+    en_mac_fifo_write = (byte_count == 12);
+    en_crossbar_fifo_write = (byte_count == 14 && state == process_middle); // Enable pulse for the MAC learning
     next_state = idle;
     data = data_in;
     fcs_error = 2'b01; // Default value for fcs_error
@@ -151,44 +151,45 @@ module fcs_check #(
     if(reset)
     begin
       state <= idle;
+		fcs_reg    <= 32'd0;
     end
     else
     begin
       state <= next_state;
       if (start_of_frame || state != idle && next_state != idle)
       begin
-        fcs_reg[0]  <= fcs_reg[24] ^ fcs_reg[30] ^ data[0];
-        fcs_reg[1]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[1];
-        fcs_reg[2]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[2];
-        fcs_reg[3]  <= fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[31] ^ data[3];
-        fcs_reg[4]  <= fcs_reg[24] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[30] ^ data[4];
-        fcs_reg[5]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[5];
-        fcs_reg[6]  <= fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[6];
-        fcs_reg[7]  <= fcs_reg[24] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[29] ^ fcs_reg[31] ^ data[7];
-        fcs_reg[8]  <= fcs_reg[0]  ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[27] ^ fcs_reg[28];
-        fcs_reg[9]  <= fcs_reg[1]  ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[28] ^ fcs_reg[29];
-        fcs_reg[10] <= fcs_reg[2]  ^ fcs_reg[24] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[29];
-        fcs_reg[11] <= fcs_reg[3]  ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[27] ^ fcs_reg[28];
-        fcs_reg[12] <= fcs_reg[4]  ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[30];
-        fcs_reg[13] <= fcs_reg[5]  ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[29] ^ fcs_reg[30] ^ fcs_reg[31];
-        fcs_reg[14] <= fcs_reg[6]  ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[30] ^ fcs_reg[31];
-        fcs_reg[15] <= fcs_reg[7]  ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[31];
-        fcs_reg[16] <= fcs_reg[8]  ^ fcs_reg[24] ^ fcs_reg[28] ^ fcs_reg[29];
-        fcs_reg[17] <= fcs_reg[9]  ^ fcs_reg[25] ^ fcs_reg[29] ^ fcs_reg[30];
-        fcs_reg[18] <= fcs_reg[10] ^ fcs_reg[26] ^ fcs_reg[30] ^ fcs_reg[31];
-        fcs_reg[19] <= fcs_reg[11] ^ fcs_reg[27] ^ fcs_reg[31];
-        fcs_reg[20] <= fcs_reg[12] ^ fcs_reg[28];
-        fcs_reg[21] <= fcs_reg[13] ^ fcs_reg[29];
-        fcs_reg[22] <= fcs_reg[14] ^ fcs_reg[24];
-        fcs_reg[23] <= fcs_reg[15] ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[30];
-        fcs_reg[24] <= fcs_reg[16] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[31];
-        fcs_reg[25] <= fcs_reg[17] ^ fcs_reg[26] ^ fcs_reg[27];
-        fcs_reg[26] <= fcs_reg[18] ^ fcs_reg[24] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[30];
-        fcs_reg[27] <= fcs_reg[19] ^ fcs_reg[25] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[31];
-        fcs_reg[28] <= fcs_reg[20] ^ fcs_reg[26] ^ fcs_reg[29] ^ fcs_reg[30];
-        fcs_reg[29] <= fcs_reg[21] ^ fcs_reg[27] ^ fcs_reg[30] ^ fcs_reg[31];
-        fcs_reg[30] <= fcs_reg[22] ^ fcs_reg[28] ^ fcs_reg[31];
-        fcs_reg[31] <= fcs_reg[23] ^ fcs_reg[29];
+            fcs_reg[0]  <= fcs_reg[24] ^ fcs_reg[30] ^ data[0];
+            fcs_reg[1]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[1];
+            fcs_reg[2]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[2];
+            fcs_reg[3]  <= fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[31] ^ data[3];
+            fcs_reg[4]  <= fcs_reg[24] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[30] ^ data[4];
+            fcs_reg[5]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[5];
+            fcs_reg[6]  <= fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[6];
+            fcs_reg[7]  <= fcs_reg[24] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[29] ^ fcs_reg[31] ^ data[7];    
+            fcs_reg[8]  <= fcs_reg[0]  ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[27] ^ fcs_reg[28];
+            fcs_reg[9]  <= fcs_reg[1]  ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[28] ^ fcs_reg[29];
+            fcs_reg[10] <= fcs_reg[2]  ^ fcs_reg[24] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[29];
+            fcs_reg[11] <= fcs_reg[3]  ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[27] ^ fcs_reg[28];
+            fcs_reg[12] <= fcs_reg[4]  ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[30];
+            fcs_reg[13] <= fcs_reg[5]  ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[29] ^ fcs_reg[30] ^ fcs_reg[31];
+            fcs_reg[14] <= fcs_reg[6]  ^ fcs_reg[26] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[30] ^ fcs_reg[31];
+            fcs_reg[15] <= fcs_reg[7]  ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[31];
+            fcs_reg[16] <= fcs_reg[8]  ^ fcs_reg[24] ^ fcs_reg[28] ^ fcs_reg[29];
+            fcs_reg[17] <= fcs_reg[9]  ^ fcs_reg[25] ^ fcs_reg[29] ^ fcs_reg[30];
+            fcs_reg[18] <= fcs_reg[10] ^ fcs_reg[26] ^ fcs_reg[30] ^ fcs_reg[31];
+            fcs_reg[19] <= fcs_reg[11] ^ fcs_reg[27] ^ fcs_reg[31];
+            fcs_reg[20] <= fcs_reg[12] ^ fcs_reg[28];
+            fcs_reg[21] <= fcs_reg[13] ^ fcs_reg[29];
+            fcs_reg[22] <= fcs_reg[14] ^ fcs_reg[24];
+            fcs_reg[23] <= fcs_reg[15] ^ fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[30];
+            fcs_reg[24] <= fcs_reg[16] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[31];
+            fcs_reg[25] <= fcs_reg[17] ^ fcs_reg[26] ^ fcs_reg[27];
+            fcs_reg[26] <= fcs_reg[18] ^ fcs_reg[24] ^ fcs_reg[27] ^ fcs_reg[28] ^ fcs_reg[30];
+            fcs_reg[27] <= fcs_reg[19] ^ fcs_reg[25] ^ fcs_reg[28] ^ fcs_reg[29] ^ fcs_reg[31];
+            fcs_reg[28] <= fcs_reg[20] ^ fcs_reg[26] ^ fcs_reg[29] ^ fcs_reg[30];
+            fcs_reg[29] <= fcs_reg[21] ^ fcs_reg[27] ^ fcs_reg[30] ^ fcs_reg[31];
+            fcs_reg[30] <= fcs_reg[22] ^ fcs_reg[28] ^ fcs_reg[31];
+            fcs_reg[31] <= fcs_reg[23] ^ fcs_reg[29];
       end
       else
       begin

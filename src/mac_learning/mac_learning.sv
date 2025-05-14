@@ -2,44 +2,41 @@
 
 
 module dual_port_bram #(
-    parameter int HASH_WIDTH = 32,
-    parameter int BRAM_WIDTH = 10,
-    parameter int DATA_WIDTH = 4
-  )(clk,wen,ren,addra,addrb,dia,dob);
+  parameter int HASH_WIDTH  = 32,
+  parameter int BRAM_WIDTH  = 10,
+  parameter int DATA_WIDTH  = 4
+)(
+  input  logic                    clk,
+  input  logic                    wen,
+  input  logic                    ren,
+  input  logic [HASH_WIDTH-1:0]   addra,
+  input  logic [HASH_WIDTH-1:0]   addrb,
+  input  logic [DATA_WIDTH-1:0]   dia,
+  output logic [DATA_WIDTH-1:0]   dob
+);
 
-  input clk,wen,ren;
-  input [HASH_WIDTH-1:0] addra,addrb;
-  input [DATA_WIDTH-1:0] dia;
-  output [DATA_WIDTH-1:0] dob;
+  // Local constants
+  localparam int DEPTH = 1 << BRAM_WIDTH;
 
-  localparam TABLE_SIZE = 2 ** BRAM_WIDTH;
-  reg [DATA_WIDTH-1:0] ram [TABLE_SIZE-1:0] = '{default: '0};
-  reg [DATA_WIDTH-1:0] dob;
+  // Quartus RAM‐style attribute:
+  // change "M10K" to "M9K" or "MLAB" if you prefer a different block
+  (* ramstyle = "M10K" *) logic [DATA_WIDTH-1:0] ram [0:DEPTH-1];
 
+  // Compute effective BRAM addresses by modulo
+  wire [31:0] addr_a_full = addra % DEPTH;
+  wire [BRAM_WIDTH-1:0] addr_a = addr_a_full[BRAM_WIDTH-1:0];
+  
+  wire [31:0] addr_b_full = addrb % DEPTH;
+  wire [BRAM_WIDTH-1:0] addr_b = addr_b_full[BRAM_WIDTH-1:0];
 
-  // 32-bit interim result (no error, you’ll get a truncation warning if your RHS > BRAM_WIDTH)
-  wire [31:0] mod_a = addra % TABLE_SIZE;
-  wire [31:0] mod_b = addrb % TABLE_SIZE;
-
-  // now slice a named wire (legal in Verilog-2001)
-  wire [BRAM_WIDTH-1:0] effective_indexa = mod_a[BRAM_WIDTH-1:0];
-  wire [BRAM_WIDTH-1:0] effective_indexb = mod_b[BRAM_WIDTH-1:0];
-
-
-
-  always @(posedge clk)
-  begin
-    if (wen)
-      ram[effective_indexa] <= dia;
-  end
-
-  always @(posedge clk)
-  begin
-    if (ren)
-      dob <= ram[effective_indexb];
+  // Single‐clock dual‐port: write and read can happen in same cycle
+  always_ff @(posedge clk) begin
+    if (wen)    ram[addr_a] <= dia;
+    if (ren)    dob        <= ram[addr_b];
   end
 
 endmodule
+
 
 
 
@@ -59,8 +56,8 @@ module mac_learning#(
     input clk,
     input rst,
     input en,
-    input [8*6-1:0] src_mac,
-    input [8*6-1:0] dst_mac,
+    input [47:0] src_mac,
+    input [47:0] dst_mac,
     input [2:0] src_port,
     output reg done,
     output reg [2:0] dst_port,
@@ -76,7 +73,7 @@ module mac_learning#(
   logic [35:0] info_in;
   wire  [35:0] info_out;
 
-
+	
   logic [HASH_WIDTH-1:0] src_hash, dst_hash;
 
   // implementing sweeping with two parallel FSM controlled by the sweep_mode, that is determined by the mac_learning en
@@ -89,14 +86,26 @@ module mac_learning#(
   assign bram_din  = sweep_mode ? sweep_din    : learning_din;
   assign bram_wen  = sweep_mode ? sweep_wen    : learning_wen;
   assign bram_ren  = sweep_mode ? sweep_ren    : learning_ren;
-
-
+  
   logic [26:0] one_hz_counter;
   logic [31:0] five_minute_counter;
 
-  logic remove_flag = 1'b0;
   logic en_d;
 
+  logic [47:0] src_mac_reg;
+  logic [47:0] dst_mac_reg;
+  logic [2:0]  src_port_reg;
+  
+  
+  always_ff @(posedge clk) begin
+	en_d <= en;
+	if (en_d) begin
+		src_mac_reg <= src_mac;
+		dst_mac_reg <= dst_mac;
+		src_port_reg <= src_port;
+	end
+  end
+	
   logic [HASH_WIDTH-1:0] new_src_hash, new_dst_hash;
 
 
@@ -118,7 +127,7 @@ module mac_learning#(
     hash_accum = FNV_OFFSET;
     for (int i = 5; i >= 0; i--)
     begin
-      hash_accum = ((hash_accum ^ {24'b0, src_mac[i*8 +: 8]}) * FNV_PRIME) & 32'hFFFFFFFF;
+      hash_accum = ((hash_accum ^ src_mac_reg[i*8 +: 8]) * FNV_PRIME) & 32'hFFFFFFFF;
     end
     new_src_hash = hash_accum;
 
@@ -126,15 +135,20 @@ module mac_learning#(
     hash_accum = FNV_OFFSET;
     for (int i = 5; i >= 0; i--)
     begin
-      hash_accum = ((hash_accum ^ {24'b0, dst_mac[i*8 +: 8]}) * FNV_PRIME) & 32'hFFFFFFFF;
+      hash_accum = ((hash_accum ^ dst_mac_reg[i*8 +: 8]) * FNV_PRIME) & 32'hFFFFFFFF;
     end
     new_dst_hash = hash_accum;
   end
 
-
+  
+   
+  
+  
+  enum logic [1:0] {IDLE_, LOOKUP, FORWARD, LEARN} learning_state_t;
   enum logic [1:0] {IDLE, READ, CHECK, CLEAR} sweep_state_t;
+  
   logic [35:0] sweep_data;
-  assign busy = (learning_state_t != IDLE_);
+  assign busy = ( (learning_state_t != IDLE_) || (en_d) );
 
   always_ff @(posedge clk)
   begin
@@ -160,10 +174,12 @@ module mac_learning#(
         CHECK:
         begin
           sweep_data <= info_out;
-          assert( info_out[35:4] < five_minute_counter ) else
-          begin // CHANGE BACK
-            $error("Does not detect time violation!");
+          /*
+			 assert( info_out[35:4] < five_minute_counter ) else
+          begin
+            $display("MAC_LEARNING: Does not detect time violation!");
           end
+			 */
           if ( info_out[35:4] < five_minute_counter )
           begin
             sweep_state_t <= CLEAR;
@@ -184,30 +200,39 @@ module mac_learning#(
     end
   end
 
+
   always_comb
   begin
     sweep_ren = (sweep_state_t == READ);
     sweep_wen = ((sweep_state_t == CHECK) && (info_out[35:4] < five_minute_counter)); // CHANGE BACK
     learning_ren = (learning_state_t == LOOKUP);
     learning_wen = (learning_state_t == LEARN);
+	 learning_addrb = new_dst_hash;
+	 learning_addra = new_src_hash;
   end
 
-  enum logic [1:0] {IDLE_, LOOKUP, FORWARD, LEARN} learning_state_t;
 
 
   always_ff @(posedge clk)
   begin
+  
     if (rst)
     begin
+		tag_port <= 0;
       learning_state_t <= IDLE_;
       dst_port <= 3'b110; // default value : INVALID
-      learning_addrb <= 0;
-      learning_addra <= 0;
       done <= 0;
-      sweep_mode <= 0;
+      sweep_mode <= 1;
     end
     else
     begin
+		
+	 	if (learning_state_t != IDLE_) begin
+			  $display("MAC_LEARNING: At time %0t: en_d = %b, state = %0d, sweep_mode = %0d, bram_wen = %0d, bram_ren = %0d, bram_addr_read = %0h, bram_addr_write = %0h, learning_ren = %0d, learning_wen = %0d", $time, en_d, learning_state_t, 
+				sweep_mode, bram_wen, bram_ren, bram_addra, bram_addrb, learning_ren, learning_wen);
+			  $display("MAC_LEARNING: new_dst_hash = %0h new_src_hash = %0h", new_dst_hash, new_src_hash, );
+		end
+	 
       case (learning_state_t)
         IDLE_:
         begin
@@ -215,37 +240,35 @@ module mac_learning#(
           sweep_mode <= 1;
           if (en_d)
           begin
+			   tag_port <= src_port[1:0];   
             learning_state_t <= LOOKUP;
             sweep_mode <= 0;
           end
-          learning_addrb <= new_dst_hash;
-          learning_addra <= new_src_hash;
         end
         LOOKUP:
         begin
-
           learning_state_t <= FORWARD;
         end
         FORWARD:
         begin
-          assert (info_out[0] == 1'bx || info_out[0] == 1'bz)
-          begin
-            $error("info_out is not defined in state FORWARD");
-          end
+          assert (info_out[0] == 1'bx || info_out[0] == 1'bz) else
+				$error("MAC_LEARNING: info_out is not found in memory at time %0t", $time);
 
           if (info_out[0]) // if valid
             dst_port <= info_out[3:1];
           else
-            dst_port <= 3'b100;
-          learning_din   <= {five_minute_counter, src_port, 1'b1};
+            dst_port <= 3'b100; 
+          learning_din   <= {five_minute_counter, src_port_reg, 1'b1};
           learning_state_t <= LEARN;
-
+			 done <= 1;
+			 $display("MAC_LEARNING: Time = %0d, tag_port = %0b, done = %0b, dst_port = %0b",$time, tag_port, done, dst_port);
         end
         LEARN:
         begin
+		    $display("MAC_LEARNING: Time = %0d, tag_port = %0b, done = %0b, dst_port = %0b",$time, tag_port, done, dst_port);
           learning_state_t <= IDLE_;
           dst_port <= 3'b110; // default value : INVALID
-          done <= 1;
+          done <= 0;
         end
       endcase
     end
@@ -266,11 +289,8 @@ module mac_learning#(
     end
     else
     begin
-      one_hz_counter <= one_hz_counter + 1;
+		one_hz_counter <= one_hz_counter + 27'd1;
     end
   end
-
-  always_ff @(posedge clk) en_d <= en;
-
 
 endmodule

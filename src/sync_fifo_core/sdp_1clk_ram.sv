@@ -18,8 +18,8 @@ module sdp_1clk_ram #(
   input  logic [P_ADDR_WIDTH-1:0] addr_rd_i,
   output logic [P_DATA_WIDTH-1:0] data_rd_o
 ); 
-  // RAM STYLE (Attribute for Quartus) can also be "MLAB", "M144K" or "logic"
-  (* ramstyle = "M9K" *) logic [P_DATA_WIDTH-1:0] ram [2**P_ADDR_WIDTH];
+  // RAM STYLE (Attribute for Quartus) can also be "MLAB", "M144K" or "logic" (used "M9K")
+  (* ramstyle = "M10K" *) logic [P_DATA_WIDTH-1:0] ram [2**P_ADDR_WIDTH];
 
   always_ff @(posedge clk_i) begin
     if (wr_i) ram[addr_wr_i] <= data_wr_i;

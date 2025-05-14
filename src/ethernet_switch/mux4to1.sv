@@ -3,6 +3,7 @@
 module mux4to1 #(
     parameter int WIDTH = 8           // width of each data input
   )(
+    input  logic clk,
     input  logic [WIDTH-1:0] in0,     // data input 0
     input  logic [WIDTH-1:0] in1,     // data input 1
     input  logic [WIDTH-1:0] in2,     // data input 2
@@ -11,9 +12,12 @@ module mux4to1 #(
     output logic [WIDTH-1:0] out      // mux output
   );
 
+  
+  logic [3:0] d1_sel;
+  
   always_comb
   begin
-    unique case (sel)
+    unique case (d1_sel)
              4'b0001:
                out = in0;
              4'b0010:
@@ -26,5 +30,14 @@ module mux4to1 #(
                out = '0;  // safe default if no or multiple bits set
            endcase
          end
+	
+	always_ff @(posedge(clk)) begin
+		d1_sel <= sel;
+	end
+			
 
+			
+			
+			
        endmodule
+		 
