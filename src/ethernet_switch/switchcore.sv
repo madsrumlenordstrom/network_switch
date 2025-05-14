@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 // This module has the same name and port map as the (dummy) switchcore in the De4_SWitch project
 
-module switchcore_top #(
+module switchcore #(
     parameter int P_ADDR_WIDTH = 7
   ) (
     input  logic                         clk,

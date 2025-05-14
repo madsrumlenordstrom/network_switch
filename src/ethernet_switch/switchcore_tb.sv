@@ -77,7 +77,7 @@ logic [7:0] packet_data_array2 [0:113] = '{
   
 
   // Instantiate DUT
-  switchcore_top #(
+  switchcore #(
                .P_ADDR_WIDTH(P_ADDR_WIDTH)
              ) uut (
                .clk       (clk),
