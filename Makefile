@@ -9,7 +9,6 @@ OBJ_DIR = obj_dir
 SRCS=$(wildcard $(SRC_DIR)/*.sv) \
 	$(wildcard $(SRC_DIR)/crossbar/*.sv) \
 	$(wildcard $(SRC_DIR)/sync_fifo_core/*.sv) \
-	$(wildcard $(SRC_DIR)/async_fifo_file/*.sv) \
 	$(wildcard $(SRC_DIR)/ethernet_switch/*.sv) \
 	$(wildcard $(SRC_DIR)/mac_learning/*.sv)
 
