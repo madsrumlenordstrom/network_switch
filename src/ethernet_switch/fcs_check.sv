@@ -1,24 +1,23 @@
 `timescale 1ns / 1ps
 
 module fcs_check #(
-    parameter logic [2:0] P_SRC_PORT = 3'd0
+    parameter logic [2:0] P_SRC_PORT = 3'd0 // Source port associated with FCS module
   ) (
-    input logic clk,
-    input logic reset,
-    input logic rx_ctrl,     // Arrival of start of frame in frame and end of frame
-    input logic [7:0] data_in,      // Bytes transmitted
-    input logic [2:0] dst_port_in,  // Destination port from the
-    output logic [1:0] fcs_error,         // Indicates an error , functions as enable signal
-    output logic en_crossbar_fifo_write, // Write enable signal for the crossbar
-
-    // Added signals
-    output logic en_mac_fifo_write,      // Read enable signal for the FIFO
-    output logic [47:0] dst_mac,    // Destination MAC address
-    output logic [47:0] src_mac,    // Source MAC address
-    output logic [2:0] src_port,    // Source port
-    output logic [7:0] data_out,    // Data forwarded to FIFO
-    output logic rx_done,           // Indicates the FCS check is done i.e.
-    output logic [2:0] dst_port_out // Destination port from the crossbar
+    input  logic clk,
+    input  logic reset,
+    input  logic rx_ctrl, // Used for deriving start and end of frame
+    
+    input  logic [7:0]    data_in,       // Bytes transmitted
+    input  logic [2:0]    dst_port_in,   // Destination port from the
+    output logic [1:0]    fcs_error,     //  Indicates if data is corrupted
+    output logic en_crossbar_fifo_write,
+    output logic en_mac_fifo_write,
+    output logic rx_done,            // Indicates the FCS check is done computing
+    output logic [47:0] dst_mac,     // Destination MAC address
+    output logic [47:0] src_mac,     // Source MAC address
+    output logic [2:0]  src_port,    // Source port
+    output logic [7:0]  data_out,    // Data forwarded to FIFO
+    output logic [2:0]  dst_port_out // Destination port from the crossbar
   );
 
   logic [31:0] fcs_reg;
