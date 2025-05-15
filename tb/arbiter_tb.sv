@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 // ############################################################################
 //  Module: arbiter_tb
 //  Description: This module implements a simple testbench for the arbiter module.

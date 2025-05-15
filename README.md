@@ -18,7 +18,7 @@ This will provide an environment with simulation and test tools.
 j
 You can run a specific testbench by setting the ```TEST_MODULE``` from the command line:
 ```shell
-make TEST_MODULE=async_fifo_tb test
+make TEST_MODULE=crossbar_tb test
 ```
 
 With Quartus installed you can run:

@@ -1,17 +1,12 @@
 `timescale 1ns / 1ps
 
-
 module mac_learning_tb;
-
-
     // Parameters 
     parameter COUNT_THRES = 2;
     parameter INIT_COUNT = 302; // Past threshold, will be deleted when sweeping reaches index
-    parameter HASH_WIDTH = 32;  // Supports 32-bit, 64-bit, etc.
     parameter BRAM_START_INDEX = 1545;
     parameter TIMER_SIZE = 30; // bits allocated to timeout timer
-    
-    
+
     reg clk;
     reg rst;
     reg en;
@@ -19,14 +14,14 @@ module mac_learning_tb;
     reg [47:0] dst_mac;
     reg [2:0] src_port;
     wire done;
+    wire busy;
     wire [2:0] dst_port;
-    
+    wire [2:0] tag_port;
     
     mac_learning #(
         .BRAM_START_INDEX(BRAM_START_INDEX),
         .INIT_COUNT(INIT_COUNT),
         .COUNT_THRES(COUNT_THRES),
-        .HASH_WIDTH(HASH_WIDTH),
         .TIMER_SIZE(TIMER_SIZE)
     ) dut (
         .clk(clk),
@@ -36,7 +31,9 @@ module mac_learning_tb;
         .dst_mac(dst_mac),
         .src_port(src_port),
         .done(done),
-        .dst_port(dst_port)
+        .busy(busy),
+        .dst_port(dst_port),
+        .tag_port(tag_port)
     );
     
     always #5 clk = ~clk;
@@ -59,7 +56,7 @@ module mac_learning_tb;
         
         @(posedge clk);  
         
-        fd = $fopen("C:/Users/hajprut/github/network-switch/src/mac_learning_files/mac_learning_tb_vec.csv", "r");  // Windows
+        fd = $fopen("./src/mac_learning_files/mac_learning_tb_vec.csv", "r");
         if (fd == 0) begin
             $fatal("Error: Could not open CSV file!");
         end
@@ -83,11 +80,7 @@ module mac_learning_tb;
             @(posedge clk);    
             line_num++;   
         end
-    
-    
     #10;
-    
-    
     
    $fclose(fd);
    
@@ -95,10 +88,4 @@ module mac_learning_tb;
    $finish;
    
    end     
-        
-        
 endmodule
-
-
-
-

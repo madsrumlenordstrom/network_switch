@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 module sync_fifo_core_tb;
 
   // TB parameters 
@@ -59,7 +61,7 @@ module sync_fifo_core_tb;
 
     $display("#### FIFO Out Matched with Reference  ####");
     for(int i = 0; i<100; i++) begin // Random stimuli in bursts (behaving nicely not trying to overfill FIFO)
-      fifo_free_space = (32)'((2**P_ADDR_WIDTH)-fill_level_o);
+      fifo_free_space = (32)'((2**P_ADDR_WIDTH)-(32)'(fill_level_o));
       if(fifo_free_space == 0) begin
         #PERIOD_A;
       end else begin
@@ -129,6 +131,4 @@ module sync_fifo_core_tb;
     #PERIOD_A;
 
   endtask
-
-
 endmodule

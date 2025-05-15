@@ -1,3 +1,5 @@
+`timescale 1ns / 1ps
+
 // ############################################################################
 //  Module: crossbar_tb
 //  Description: Testbench for the Crossbar module. Checks the functionality

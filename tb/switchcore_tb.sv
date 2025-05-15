@@ -1,4 +1,4 @@
-`timescale 1ns/1ps
+`timescale 1ns / 1ps
 
 module switchcore_tb;
   // Parameters
@@ -19,46 +19,40 @@ module switchcore_tb;
         8'h0E, 8'h0F, 8'h10, 8'h11, 8'hE6, 8'hC5, 8'h3D, 8'hB2
     }; 
 
-
-	 // 64-byte test packet (including FCS 1F F3 C6 0D) has the same dst address as the src address of packet_data_array0
-logic [7:0] packet_data_array1 [0:63] = '{
-		8'h00, 8'h12, 8'h34, 8'h56, 8'h78, 8'h90, 8'h08, 8'h00, 
-		8'h45, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h00, 8'h45, 8'h00, 
-		8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 
-		8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 
-		8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 
-		8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 
-		8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D,
-		8'h0E, 8'h0F, 8'h10, 8'h11, 8'h1F, 8'hF3, 8'hC6, 8'h0D
-};
-
+    // 64-byte test packet (including FCS 1F F3 C6 0D) has the same dst address as the src address of packet_data_array0
+    logic [7:0] packet_data_array1 [0:63] = '{
+    		8'h00, 8'h12, 8'h34, 8'h56, 8'h78, 8'h90, 8'h08, 8'h00, 
+    		8'h45, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h00, 8'h45, 8'h00, 
+    		8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 
+    		8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 
+    		8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 
+    		8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 
+    		8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D,
+    		8'h0E, 8'h0F, 8'h10, 8'h11, 8'h1F, 8'hF3, 8'hC6, 8'h0D
+    };
 
 
-	 // 64-byte test packet (including FCS D6 FE 75 54) has the same dst address as the src address of packet_data_array0
-logic [7:0] packet_data_array3 [0:63] = '{
-    8'h00, 8'h12, 8'h34, 8'h56, 8'h78, 8'h90, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'hFF, 8'hFF, 8'h40, 8'hFF, 8'hA8, 8'hFF, 8'h2C, 8'hC0, 8'hFF, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h0E, 8'h0F, 8'h10, 8'h11, 8'hD6, 8'hFE, 8'h75, 8'h54
-};
 
-	 // 64-byte test packet (including FCS D6 0A D5 4A), broadcasts
-logic [7:0] packet_data_array4 [0:63] = '{
-    8'h00, 8'h12, 8'h34, 8'hEE, 8'hEE, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hEE, 8'hEE, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hA8, 8'hFF, 8'h2C, 8'hC0, 8'hFF, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h0E, 8'h0F, 8'h10, 8'h11, 8'hD6, 8'h0A, 8'hD5, 8'h4A
-};
+    // 64-byte test packet (including FCS D6 FE 75 54) has the same dst address as the src address of packet_data_array0
+    logic [7:0] packet_data_array3 [0:63] = '{
+        8'h00, 8'h12, 8'h34, 8'h56, 8'h78, 8'h90, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'hFF, 8'hFF, 8'h40, 8'hFF, 8'hA8, 8'hFF, 8'h2C, 8'hC0, 8'hFF, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h0E, 8'h0F, 8'h10, 8'h11, 8'hD6, 8'hFE, 8'h75, 8'h54
+    };
+
+    // 64-byte test packet (including FCS D6 0A D5 4A), broadcasts
+    logic [7:0] packet_data_array4 [0:63] = '{
+        8'h00, 8'h12, 8'h34, 8'hEE, 8'hEE, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hEE, 8'hEE, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hFF, 8'hA8, 8'hFF, 8'h2C, 8'hC0, 8'hFF, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h0E, 8'h0F, 8'h10, 8'h11, 8'hD6, 8'h0A, 8'hD5, 8'h4A
+    };
 
 
-	// 114-byte test packet (including FCS B4 38 56 E5) has the same dst address as the src address of packet_data_array1
-logic [7:0] packet_data_array2 [0:113] = '{
-    8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h22, 8'h22, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h01, 8'h22, 8'h19, 8'h02, 8'h32, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h01, 8'h22, 8'h19, 8'h02, 8'h32, 8'hB4, 8'h38, 8'h56, 8'hE5     
-};
+    // 114-byte test packet (including FCS B4 38 56 E5) has the same dst address as the src address of packet_data_array1
+    logic [7:0] packet_data_array2 [0:113] = '{
+        8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h22, 8'h22, 8'h00, 8'h00, 8'h2E, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h01, 8'h22, 8'h19, 8'h02, 8'h32, 8'h08, 8'h00, 8'h45, 8'h00, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h01, 8'h22, 8'h19, 8'h02, 8'h32, 8'hB4, 8'h38, 8'h56, 8'hE5     
+    };
 
     // Data but with a random bit flipped
     logic [7:0] packet_data_array0_incorrect [0:PACKET_LEN-1] = '{
         8'h00, 8'h10, 8'hA4, 8'h7B, 8'hEA, 8'h80, 8'h00, 8'h12, 8'h34, 8'h56, 8'h78, 8'h90, 8'h08, 8'h00, 8'h45, 8'h10, 8'h00, 8'h2E, 8'hB3, 8'hFE, 8'h00, 8'h00, 8'h80, 8'h11, 8'h05, 8'h40, 8'hC0, 8'hA8, 8'h00, 8'h2C, 8'hC0, 8'hA8, 8'h00, 8'h04, 8'h04, 8'h00, 8'h04, 8'h00, 8'h00, 8'h1A, 8'h2D, 8'hE8, 8'h00, 8'h01, 8'h02, 8'h03, 8'h04, 8'h05, 8'h06, 8'h07, 8'h08, 8'h09, 8'h0A, 8'h0B, 8'h0C, 8'h0D, 8'h0E, 8'h0F, 8'h10, 8'h11, 8'hE6, 8'hC5, 8'h3D, 8'hB2
     }; 
-
-
-
-
-
 
   // Clock and reset
   logic clk;
@@ -75,7 +69,6 @@ logic [7:0] packet_data_array2 [0:113] = '{
   logic [31:0] tx_data;
   logic [3:0]  tx_ctrl;
   
-
   // Instantiate DUT
   switchcore #(
                .P_ADDR_WIDTH(P_ADDR_WIDTH)
@@ -90,7 +83,7 @@ logic [7:0] packet_data_array2 [0:113] = '{
              );
 
 // Variables
-    int byte_index;
+int byte_index;
 
     // Clock Generation
     always #(CLK_PERIOD / 2) clk = ~clk;
@@ -115,7 +108,6 @@ task automatic transmit_longer_packet(input logic [7:0] data[0:PACKET0_LEN-1], i
             @(negedge clk);
         end
     endtask
-
 
 task automatic transmit_packet(input logic [7:0] data[0:PACKET_LEN-1], input int lane );
         begin
@@ -211,9 +203,6 @@ task automatic transmit_two_packet_async(
     end
 endtask
 
-
-
-
     // Test Sequence
     initial begin
         // Initialize Signals
@@ -236,17 +225,3 @@ endtask
         $finish;
     end
 endmodule
-
-
-
-
-  // Optional: monitor outputs
-  /*
-  initial
-  begin
-    $display("Time   clk reset link_sync rx_ctrl rx_data      -> tx_ctrl tx_data");
-    $monitor("%0t   %b   %b    %b       %b       0x%08h -> %b      0x%08h",
-             $time, clk, reset, link_sync, rx_ctrl, rx_data, tx_ctrl, tx_data);
-  end
-*/
-

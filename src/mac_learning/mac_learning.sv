@@ -1,6 +1,5 @@
 `timescale 1ns / 1ps
 
-
 module dual_port_bram #(
   parameter int HASH_WIDTH  = 32,
   parameter int BRAM_WIDTH  = 10,
@@ -36,16 +35,6 @@ module dual_port_bram #(
   end
 
 endmodule
-
-
-
-
-
-
-
-
-
-
 
 module mac_learning #(
     parameter int BRAM_START_INDEX   = 0,
