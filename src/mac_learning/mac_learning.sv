@@ -47,22 +47,22 @@ endmodule
 
 
 
-module mac_learning#(
-    parameter int BRAM_START_INDEX = 0,
-    parameter int INIT_COUNT = 0,
-    parameter bit [26:0] COUNT_THRES = 124999999,
-    parameter TIMER_SIZE = 30 // bits allocated to timeout timer
+module mac_learning #(
+    parameter int BRAM_START_INDEX   = 0,
+    parameter int INIT_COUNT         = 0,
+    parameter bit [26:0] COUNT_THRES = 124999999, // 1 Hz constant
+    parameter TIMER_SIZE             = 30         // Bits used for counter
   )(
     input clk,
     input rst,
-    input en,
+    input en,               
     input [47:0] src_mac,
     input [47:0] dst_mac,
-    input [2:0] src_port,
-    output reg done,
-    output reg [2:0] dst_port,
-    output reg [1:0] tag_port,
-    output reg busy
+    input [2:0]  src_port,
+    output reg   done, // MAC learning done learning, destination port ready
+    output reg   busy, // MAC learning is busy
+    output reg [2:0] dst_port, // Destination port
+    output reg [1:0] tag_port  // 2 bit Source port used for demux sel 
   );
 
   localparam int HASH_WIDTH   = 32;
