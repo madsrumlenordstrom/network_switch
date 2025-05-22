@@ -1,162 +1,159 @@
+// ############################################################################
+//  Module: fcs_check
+//  Description: Frame Check Sequence (FCS) checker module.
+//               Computes CRC across incoming Ethernet frame data,
+//               extracts source and destination MAC addresses,
+//               and signals FCS errors and control events.
+//  Parameters: 
+//    - P_SRC_PORT: Source port identifier used in output metadata.
+// ############################################################################
+
 `timescale 1ns / 1ps
 
 module fcs_check #(
-    parameter logic [2:0] P_SRC_PORT = 3'd0 // Source port associated with FCS module
-  ) (
-    input  logic clk,
-    input  logic reset,
-    input  logic rx_ctrl, // Used for deriving start and end of frame
-    
-    input  logic [7:0]    data_in,       // Bytes transmitted
-    input  logic [2:0]    dst_port_in,   // Destination port from the
-    output logic [1:0]    fcs_error,     //  Indicates if data is corrupted
-    output logic en_crossbar_fifo_write,
-    output logic en_mac_fifo_write,
-    output logic rx_done,            // Indicates the FCS check is done computing
-    output logic [47:0] dst_mac,     // Destination MAC address
-    output logic [47:0] src_mac,     // Source MAC address
-    output logic [2:0]  src_port,    // Source port
-    output logic [7:0]  data_out,    // Data forwarded to FIFO
-    output logic [2:0]  dst_port_out // Destination port from the crossbar
-  );
+  parameter logic [2:0] P_SRC_PORT = 3'd0 // Source port associated with FCS module
+) (
+  input  logic clk,
+  input  logic reset,
+
+  // Input stream
+  input  logic        rx_ctrl,      // Indicates valid byte, used for SOF/EOF detection
+  input  logic [7:0]  data_in,      // Input byte
+  input  logic [2:0]  dst_port_in,  // Destination port to pass through
+
+  // Outputs to next stages
+  output logic [7:0]  data_out,     // Output byte
+  output logic [2:0]  dst_port_out, // Propagated destination port
+  output logic [2:0]  src_port,     // Set to static P_SRC_PORT
+  output logic [47:0] dst_mac,      // Extracted destination MAC
+  output logic [47:0] src_mac,      // Extracted source MAC
+  output logic [1:0]  fcs_error,    // FCS status: 01 = default, 10 = OK, 11 = error
+  output logic        en_crossbar_fifo_write, // Enable pulse for crossbar FIFO
+  output logic        en_mac_fifo_write,      // Enable pulse for MAC learning FIFO
+  output logic        rx_done       // Frame fully received
+);
+
+  // ##########################################################################
+  //  Internal Signals
+  // ##########################################################################
 
   logic [31:0] fcs_reg;
-  logic [1:0] complement_counter;
-  logic [7:0] data;
-  wire start_of_frame;
-  wire end_of_frame;
+  logic [1:0]  complement_counter;
+  logic [7:0]  data;
 
+  logic [3:0]  byte_count;
+  logic        prev_rx_ctrl;
+  wire         start_of_frame;
+  wire         end_of_frame;
+
+  enum int unsigned {idle, complement_start, process_middle, complement_end} state, next_state;
+
+  // ##########################################################################
+  //  Combinational Assignments
+  // ##########################################################################
 
   assign dst_port_out = dst_port_in;
   assign src_port = P_SRC_PORT;
   assign rx_done = end_of_frame;
-  
-  
-  
   assign data_out = data;
-
-  enum int unsigned {idle, complement_start, process_middle, complement_end} state, next_state;
-
-  logic [3:0]  byte_count;
-  logic prev_rx_ctrl;
-
   assign start_of_frame =  rx_ctrl & ~prev_rx_ctrl;
-  assign end_of_frame =  ~rx_ctrl & prev_rx_ctrl;
+  assign end_of_frame   = ~rx_ctrl &  prev_rx_ctrl;
 
-  always_ff @(posedge clk)
-  begin
+  // ##########################################################################
+  //  MAC Address Extraction
+  // ##########################################################################
 
-    if (reset)
-    begin
+  always_ff @(posedge clk) begin
+    if (reset) begin
       prev_rx_ctrl <= 1'b0;
       byte_count   <= 4'd0;
       dst_mac      <= 48'd0;
       src_mac      <= 48'd0;
-      
-    end
-    else
-    begin
+    end else begin
       prev_rx_ctrl <= rx_ctrl;
-      if (start_of_frame)
-      begin // Sample the first byte
+
+      if (start_of_frame) begin
         byte_count <= 1;
         dst_mac    <= {40'h0, data_in};
-        src_mac    <= 0;
-      end
-      else if (byte_count != 0 && byte_count < 14)
-      begin // Sample the next 11 bytes
+        src_mac    <= 48'd0;
+      end else if (byte_count != 0 && byte_count < 14) begin
         if (byte_count < 6)
           dst_mac <= {dst_mac[39:0], data_in};
         else if (byte_count < 12)
           src_mac <= {src_mac[39:0], data_in};
-        if (byte_count < 14)
-            byte_count <= byte_count + 1;
+        byte_count <= byte_count + 1;
       end
     end
-
   end
 
-  always_comb
-  begin
-    en_mac_fifo_write = (byte_count == 12);
-    en_crossbar_fifo_write = (byte_count == 14 && state == process_middle); // Enable pulse for the MAC learning
+  // ##########################################################################
+  //  FSM and Output Control
+  // ##########################################################################
+
+  always_comb begin
     next_state = idle;
     data = data_in;
-    fcs_error = 2'b01; // Default value for fcs_error
+    fcs_error = 2'b01;
+    en_mac_fifo_write = (byte_count == 12);
+    en_crossbar_fifo_write = (byte_count == 14 && state == process_middle);
 
     case(state)
-      idle:
-      begin
-        if (start_of_frame)
-        begin
+      idle: begin
+        if (start_of_frame) begin
           data = ~data_in;
           next_state = complement_start;
-        end
-        else
-        begin
+        end else begin
           next_state = idle;
         end
       end
 
-      complement_start:
-      begin
-        if (complement_counter < 3)
-        begin
+      complement_start: begin
+        if (complement_counter < 3) begin
           data = ~data_in;
           next_state = complement_start;
-        end
-        else
-        begin
+        end else begin
           next_state = process_middle;
         end
       end
 
-      process_middle:
-      begin
-        if (end_of_frame)
-        begin
+      process_middle: begin
+        if (end_of_frame) begin
           data = ~data_in;
           next_state = complement_end;
-        end
-        else
-        begin
+        end else begin
           next_state = process_middle;
         end
       end
 
-      complement_end:
-      begin
-        if (complement_counter < 3)
-        begin
+      complement_end: begin
+        if (complement_counter < 3) begin
           data = ~data_in;
           next_state = complement_end;
-        end
-        else if (complement_counter == 3 && fcs_reg == 0)
-        begin
+        end else if (complement_counter == 3 && fcs_reg == 0) begin
           next_state = idle;
-          fcs_error = 2'b10; // FCS success
-        end
-        else
-        begin
+          fcs_error = 2'b10; // FCS OK
+        end else begin
           next_state = idle;
-          fcs_error = 2'b11; // FCS error
+          fcs_error = 2'b11; // FCS Error
         end
       end
     endcase
   end
 
-  always_ff@(posedge clk or posedge reset)
-  begin
-    if(reset)
-    begin
+  // ##########################################################################
+  //  CRC Computation and State Updates
+  // ##########################################################################
+
+  always_ff @(posedge clk or posedge reset) begin
+    if (reset) begin
       state <= idle;
-		fcs_reg    <= 32'd0;
-    end
-    else
-    begin
+      fcs_reg <= 32'd0;
+      complement_counter <= 0;
+    end else begin
       state <= next_state;
-      if (start_of_frame || state != idle && next_state != idle)
-      begin
+
+      if (start_of_frame || state != idle && next_state != idle) begin
+       begin
             fcs_reg[0]  <= fcs_reg[24] ^ fcs_reg[30] ^ data[0];
             fcs_reg[1]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[1];
             fcs_reg[2]  <= fcs_reg[24] ^ fcs_reg[25] ^ fcs_reg[26] ^ fcs_reg[30] ^ fcs_reg[31] ^ data[2];
@@ -190,20 +187,19 @@ module fcs_check #(
             fcs_reg[30] <= fcs_reg[22] ^ fcs_reg[28] ^ fcs_reg[31];
             fcs_reg[31] <= fcs_reg[23] ^ fcs_reg[29];
       end
-      else
-      begin
-        fcs_reg <= 0;
+
+      end else begin
+        fcs_reg <= 32'd0;
       end
 
-      if (start_of_frame || end_of_frame)
-      begin
+      // Complement counter for pre/post-processing
+      if (start_of_frame || end_of_frame) begin
         complement_counter <= 0;
-      end
-
-      else if (complement_counter < 3)
-      begin
+      end else if (complement_counter < 3) begin
         complement_counter <= complement_counter + 1;
       end
     end
   end
+
 endmodule
+
