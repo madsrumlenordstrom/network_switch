@@ -31,7 +31,7 @@ module switchcore #(
   // Negative reset
   //--------------------------------------------------------------------------
   logic rstn_i;
-  assign rstn_i = ~reset;
+  assign rst_i = reset;
 
   //--------------------------------------------------------------------------
   // FCS-check nets (one bit per of 4 lanes)
@@ -149,7 +149,7 @@ module switchcore #(
       // between the FCS check and the crossbar
       sync_fifo_core #(.P_ADDR_WIDTH(12), .P_DATA_WIDTH(9) ) fifo_fcs_out (
                        .clk_i         (clk),
-                       .rstn_i        (rstn_i),
+                       .rst_i        (rst_i),
                        .wr_i          (en_crossbar_fifo_write[i]),
                        .data_i        ({rx_done[i], data_out[i]}),
                        .rd_i          (en_crossbar_fifo_read[i]),
@@ -163,7 +163,7 @@ module switchcore #(
       // between the FCS check and the MAC learning
       sync_fifo_core #(.P_ADDR_WIDTH(7), .P_DATA_WIDTH(99) ) fifo_mac_learning (
                        .clk_i         (clk),
-                       .rstn_i        (rstn_i),
+                       .rst_i        (rst_i),
                        .wr_i          (en_mac_fifo_write[i]),
                        .data_i({src_mac[i], dst_mac[i], src_port[i]}),
                        .rd_i          (en_mac_fifo_read[i]),
@@ -176,19 +176,19 @@ module switchcore #(
       // 4 x Trash Control
       trash_control trash_control (
                       .clk(clk),
-							 .empty(empty_o_fcs[i]),
+		      .empty(empty_o_fcs[i]),
                       .reset(reset),
                       .fcs_error(fcs_error[i]),
-							 .done_in_mac(done_in[i]),
+		      .done_in_mac(done_in[i]),
                       .done(data_fifo_fcs_out[i][8]), // done signal from the FCS check
                       .dst_port(dst_port_out[i]), // dst_port from the FCS check
                       .en(en_crossbar_fifo_read[i]),
                       .rx_dst_port(rx_dst_port[i]),
-							 // Added
-							 .done_out(done_out[i]),
-							 .din(data_fifo_fcs_out[i]),
-							 .out(data_fifo_fcs_out_d[i]),
-						    .trash() // Not used
+		      // Added
+		      .done_out(done_out[i]),
+		      .din(data_fifo_fcs_out[i]),
+		      .out(data_fifo_fcs_out_d[i]),
+		      .trash() // Not used
                     );
 
 
@@ -199,7 +199,7 @@ module switchcore #(
   // 1 x Crossbar
   crossbar #(.P_QUEUE_ADDR_WIDTH(11)) crossbar_module (
              .clk_i(clk),
-             .rstn_i(rstn_i),
+             .rst_i(rst_i),
              .rx_dest(rx_dst_port),
              .rx_done({done_out[3], done_out[2], done_out[1], done_out[0]}),
              .rx_data({data_fifo_fcs_out_d[3][7:0], data_fifo_fcs_out_d[2][7:0] ,data_fifo_fcs_out_d[1][7:0], data_fifo_fcs_out_d[0][7:0]}),
@@ -211,14 +211,14 @@ module switchcore #(
   // 1 x Arbiter for the MAC learning
   arbiter #(.P_WIDTH(4)) fifo_arb (
             .clk_i     (clk),
-            .rstn_i    (rstn_i),
+            .rst_i    (rst_i),
             .request_i (arb_request),    // q_empty[i]=1 means FIFO is empty
             .grant_o   ({en_mac_fifo_read[3],en_mac_fifo_read[2],en_mac_fifo_read[1],en_mac_fifo_read[0]})         // arb_rd[i]=1 pulses rd_i for FIFO i
           );
 
   // 1 x Mux for the MAC learning
   mux4to1 #(.WIDTH(99)) mux_mac_learning (
-				.clk(clk),
+	    .clk(clk),
             .sel({en_mac_fifo_read[3],en_mac_fifo_read[2],en_mac_fifo_read[1],en_mac_fifo_read[0]}),
             .in0(data_mac_fifo_out[0]),
             .in1(data_mac_fifo_out[1]),
